@@ -1,18 +1,25 @@
 CC=gcc
 CFLAGS=-W -Wall -ansi -pedantic -O3
-LDFLAGS=-shared
-LIBS=-lbliz
+LDFLAGS=-shared -lblitz
+SRCDIR=src
 LIB=libclsp.so
-SRC= $(wildcard src/*.cpp)
+TEST=example
+TESTDIR=$(SRCDIR)/test
+SRC= $(wildcard $(SRCDIR)/*.cpp)
 OBJ= $(SRC:.cpp=.o)
 
-all: $(LIB)
+all: $(LIB) $(TEST)
 
 $(LIB): $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
+$(TEST):
+	@(cd $(TESTDIR) && $(MAKE) $@)
+
 %.o: %.cpp
-	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS)
+	$(CC) -o $@ -c $< $(CFLAGS)
 
 clean:
 	rm -rf src/*.o
+	@(cd $(TESTDIR) && $(MAKE) $@)
+

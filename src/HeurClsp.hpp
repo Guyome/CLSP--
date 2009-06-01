@@ -27,6 +27,8 @@ private:
 protected:
     //dynamic programming solver based on Thomas's paper
     void thomas();
+    void coefheur();
+
 
 
 public:

@@ -104,7 +104,47 @@ void HeurClsp::thomas()
         printf("-------------------------------------\n");
     }
 ////OUTPUT
-	
 }
+
+void HeurClsp::coefheur()
+{
+    Array<double,1> consValue(period);
+    secondIndex j;
+    double saturated;
+    int obj;
+    int tps;
+    
+    //find the first violated constaint
+    for (int t = 0; t < period; t ++)
+    {
+        consValue(t) = sum( (*cons)(Range::all(),t)*(*production)(Range::all(),t));
+    }
+    tps = first( consValue(Range(0,period))>(*constraint)(Range(0,toEnd)) );
+    while ( tps < period )
+    {
+        obj = 0;
+        //while the constraint is violated
+        //remove all production for the obj product
+        while ( consValue(tps) > (*constraint)(tps) )
+        {
+            //no demand for the obj product at perdior tps
+            (*production)(obj, tps) -= (*alpha)(obj, tps)- (*beta)(obj, tps)*(*price)(obj, tps);
+            (*price)(obj, tps) = (*alpha)(obj, tps)/(*beta)(obj, tps);
+            (*storage)(obj, tps) = (*production)(obj,tps);
+            obj ++;
+        }
+        //modify the obj's production to saturate the tps constraint
+        (*production)(obj, tps) -= (*alpha)(obj, tps)- (*beta)(obj, tps)*(*price)(obj, tps);
+        saturated = ( (*constraint)(tps) 
+            - sum( (*cons)(Range::all(), tps)*(*production)(Range::all(), tps) ) )
+            / (*cons)(obj, tps);
+        (*price)(obj, tps) = ( (*alpha)(obj, tps) - saturated ) / (*beta)(obj, tps);
+        (*production)(obj, tps) += (*alpha)(obj, tps) + (*alpha)(obj, tps)*(*price)(obj, tps);
+        (*storage)(obj, tps) = max( 0.,(*production)(obj,tps) - (*alpha)(obj,tps)-(*beta)(obj,tps)*(*price)(obj,tps) );
+        //find the next violated constaint
+        tps = first( consValue(Range(tps+1,toEnd))>(*constraint)(Range(tps+1,toEnd)) );
+    }
+}
+
 
 

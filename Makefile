@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-W -Wall -ansi -pedantic -O3
+CFLAGS=-W -Wall -ansi -pedantic -O3 -fPIC
 LDFLAGS=-shared -lblitz
 SRCDIR=src
 LIB=libclsp.so

@@ -17,12 +17,17 @@ private:
     Array<double,2>* stor;//holding cost
     Array<double,2>* cons;//consumption of ressouce 
     Array<double,2>* setup;//setup structure
+    Array<double,2>* price;//setup structure
+    Array<double,2>* production;//setup structure
+    Array<double,2>* storage;//setup structure
+    Array<int,2>* ind;//index structure from thomas algorithm
     Array<double,1>* constraint;//prodcution constraint
     Array<double,1>* coef;//Khun Thucker coeficient
 
 protected:
     //dynamic programming solver based on Thomas's paper
-    Array<int,2> thomas(Array<double,2> results);
+    void thomas();
+
 
 public:
     //default constructor

@@ -131,6 +131,8 @@ void HeurClsp::coefheur()
             (*production)(obj, tps) -= (*alpha)(obj, tps)- (*beta)(obj, tps)*(*price)(obj, tps);
             (*price)(obj, tps) = (*alpha)(obj, tps)/(*beta)(obj, tps);
             (*storage)(obj, tps) = (*production)(obj,tps);
+            //update constraint value
+            consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps))
             obj ++;
         }
         //modify the obj's production to saturate the tps constraint
@@ -143,6 +145,13 @@ void HeurClsp::coefheur()
         (*storage)(obj, tps) = max( 0.,(*production)(obj,tps) - (*alpha)(obj,tps)-(*beta)(obj,tps)*(*price)(obj,tps) );
         //find the next violated constaint
         tps = first( consValue(Range(tps+1,toEnd))>(*constraint)(Range(tps+1,toEnd)) );
+        
+    ////OUPOUT
+        if (verbose >2)
+        {
+            printf("In period %d: cancellation of the request to the %dth product\n",tps,obj);
+        }
+    ////OUTPUT
     }
 }
 

@@ -7,10 +7,13 @@ using namespace blitz;
 
 HeurClsp::HeurClsp(double* _alpha, double* _beta, double* _prod, double* _stor,
         double* consumption, double* _setup, double* _constraint, int _period,
-        int _product, int _verbose)
+        int _product, int _verbose, int _cycle, double _eps, double _param)
 {
     period = _period;
     product = _product;
+    cycle = _cycle;
+    eps = _eps;
+    param = _param;
     alpha = new Array<double,2>(_alpha, shape(product,period), neverDeleteData);
     beta = new Array<double,2>(_beta, shape(product,period), neverDeleteData);
     prod = new Array<double,2>(_prod, shape(product,period), neverDeleteData);
@@ -22,7 +25,7 @@ HeurClsp::HeurClsp(double* _alpha, double* _beta, double* _prod, double* _stor,
     storage = new Array<double,2>(product,period);
     ind = new Array<int,2>(product,period);
     constraint = new Array<double,1>(_constraint, shape(period), neverDeleteData);
-    coef = new Array<double,1>((product+1)*period) ; 
+    coef = new Array<double,1>(period) ; 
     coef = 0;//KKT initiate as null
     
     verbose = _verbose;
@@ -132,7 +135,7 @@ void HeurClsp::coefheur()
             (*price)(obj, tps) = (*alpha)(obj, tps)/(*beta)(obj, tps);
             (*storage)(obj, tps) = (*production)(obj,tps);
             //update constraint value
-            consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps))
+            consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps));
             obj ++;
         }
         //modify the obj's production to saturate the tps constraint
@@ -155,5 +158,53 @@ void HeurClsp::coefheur()
     }
 }
 
+double HeurClsp::objective()
+{
+    Array<double,1> profit(product);
+    for (int j = 0; j < product; j ++)
+    {
+        profit(j) = sum(
+            ((*alpha)(j,Range::all())- (*beta)(j,Range::all())*(*price)(j,Range::all()))
+            * (*price)(j,Range::all())
+            - (*prod)(j,Range::all())*(*production)(j,Range::all())
+            - (*stor)(j,Range::all())*(*storage)(j,Range::all())
+            //- (*setup)(j,Range::all())*((*production)(j,Range::all) > 0)
+            );
+    }
+    return sum(profit);
+}
+
+double HeurClsp::heursolver()
+{
+    Array<double,1> previouscoef(period);
+    double diff, upper,lower;
+    int count = 0;
+    diff = eps + 1.;
+    while ( (diff > eps) & (count < cycle) )
+    {
+        previouscoef = (*coef);
+        //compute lower and upper bound
+        thomas();
+        upper = objective();
+        coefheur();
+        lower = objective();
+        //update KKT coefficients
+        (*coef) = param*previouscoef - (1-param)*(*coef);
+        //update stoping conditions 
+        diff = upper - lower;
+        count ++;
+    }
+    
+////OUPOUT
+    if (verbose >1)
+    {
+        printf("Last objective:\t\t\t %f\n",lower);
+        printf("Number of iteration:\t\t\t %d\n",count);
+        printf("Difference between upper and lower bound:\t %f",diff);
+    }
+////OUTPUT
+
+    return lower;
+}
 
 

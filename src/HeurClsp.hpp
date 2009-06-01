@@ -10,6 +10,9 @@ private:
     int verbose;//verbosity parameter
     int period;//number of period
     int product;//number of product
+    int cycle;//maximum number of loop
+    double eps;//minimal difference between lower and upper bound
+    double param;//smoothing paramter
     //demand function is linear
     Array<double,2>* alpha;//slope
     Array<double,2>* beta;//intercept
@@ -28,13 +31,13 @@ protected:
     //dynamic programming solver based on Thomas's paper
     void thomas();
     void coefheur();
-
-
+    double objective();
 
 public:
     //default constructor
     HeurClsp(double* alpha, double* beta, double* prod, double* stor,
         double* consumption, double* setup, double* constraint, int period,
-        int product, int verbose);
+        int product, int verbose, int cycle, double eps, double param);
+    double heursolver();
 };
 #endif

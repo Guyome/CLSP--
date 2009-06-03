@@ -25,12 +25,13 @@ HeurClsp::HeurClsp(double* _alpha, double* _beta, double* _prod, double* _stor,
     storage = new Array<double,2>(product,period);
     ind = new Array<int,2>(product,period);
     constraint = new Array<double,1>(_constraint, shape(period), neverDeleteData);
-    coef = new Array<double,1>(period) ; 
-    coef = 0;//KKT initiate as null
+    coef = new Array<double,1>(period);
+    //KKT initiate as null
+    (*coef) = 0.;
     
     verbose = _verbose;
 }
-        
+
 void HeurClsp::thomas()
 {
     Array<double,1> c(period);//cost function
@@ -123,7 +124,7 @@ void HeurClsp::coefheur()
         consValue(t) = sum( (*cons)(Range::all(),t)*(*production)(Range::all(),t));
     }
     tps = first( consValue(Range(0,period))>(*constraint)(Range(0,toEnd)) );
-    while ( tps < period )
+    while ( (tps < period) & (tps > 0))
     {
         obj = 0;
         //while the constraint is violated
@@ -177,7 +178,7 @@ double HeurClsp::objective()
 double HeurClsp::heursolver()
 {
     Array<double,1> previouscoef(period);
-    double diff, upper,lower;
+    double diff, upper, lower;
     int count = 0;
     diff = eps + 1.;
     while ( (diff > eps) & (count < cycle) )

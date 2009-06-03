@@ -19,5 +19,7 @@ int main(int argv, char* argc[])
     
     HeurClsp* example = new HeurClsp(a,b,v,h,c,s,r,T,J,verb,cycle,eps,param);
 
+    printf("Run Solver...:\t");
+    example -> heursolver();
     printf("OK\n");
 }

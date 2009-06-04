@@ -10,4 +10,4 @@ $(EXEC): $(SRC)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CFLAGS) -I $(INCDIR)
 
 clean:
-	rm -rf *.o
+	rm -rf *.o $(EXEC)

@@ -1,9 +1,11 @@
 #include <stdio.h>
+#include <boost/python.hpp>
 #include <blitz/array.h>
 #include <algorithm>
 #include "HeurClsp.hpp"
 
 using namespace blitz;
+using namespace boost::python;
 
 HeurClsp::HeurClsp(double* _alpha, double* _beta, double* _prod, double* _stor,
         double* consumption, double* _setup, double* _constraint, int _period,
@@ -30,6 +32,46 @@ HeurClsp::HeurClsp(double* _alpha, double* _beta, double* _prod, double* _stor,
     (*coef) = 0.;
     
     verbose = _verbose;
+}
+
+HeurClsp::HeurClsp(list _alpha, list _beta, list _prod, list _stor,
+        list consumption, list _setup, list _constraint, int _period,
+        int _product, int _verbose, int _cycle, float _eps, float _param)
+{
+    period = _period;
+    product = _product;
+    verbose = _verbose;
+    cycle = _cycle;
+    eps = (double)_eps;
+    param = (double)_param;
+    alpha = new Array<double,2>(product,period);
+    beta = new Array<double,2>(product,period);
+    prod = new Array<double,2>(product,period);
+    stor = new Array<double,2>(product,period);
+    cons = new Array<double,2>(product,period);
+    setup = new Array<double,2>(product,period);
+    price = new Array<double,2>(product,period);
+    production = new Array<double,2>(product,period);
+    storage = new Array<double,2>(product,period);
+    ind = new Array<int,2>(product,period);
+    constraint = new Array<double,1>(period);
+    coef = new Array<double,1>(period);
+    //KKT initiate as null
+    (*coef) = 0.;
+    //import from python object
+    for (int j = 0; j < product; j ++)
+    {
+        for (int t = 0; t < period; t += 1)
+        {
+            (*alpha)(j,t) = ( extract<double>(_alpha[j][t]) );
+            (*beta)(j,t) = ( extract<double>(_beta[j][t]) );
+            (*prod)(j,t) = ( extract<double>(_prod[j][t]) );
+            (*stor)(j,t) = ( extract<double>(_stor[j][t]) );
+            (*setup)(j,t) = ( extract<double>(_setup[j][t]) );
+            (*cons)(j,t) = ( extract<double>(consumption[j][t]) );
+            (*constraint)(t) = ( extract<double>(_constraint[t]) );
+        }
+    }
 }
 
 void HeurClsp::thomas()
@@ -201,7 +243,7 @@ double HeurClsp::heursolver()
     {
         printf("Last objective:\t\t\t %f\n",lower);
         printf("Number of iteration:\t\t\t %d\n",count);
-        printf("Difference between upper and lower bound:\t %f",diff);
+        printf("Difference between upper and lower bound:\t %f\n",diff);
     }
 ////OUTPUT
 

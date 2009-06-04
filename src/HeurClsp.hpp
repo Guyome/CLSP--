@@ -1,8 +1,10 @@
 #ifndef H_CLSP_H
 #define H_CLSP_H
 
+#include <boost/python.hpp>
 #include <blitz/array.h>
 using namespace blitz;
+using namespace boost::python;
 
 class HeurClsp
 {
@@ -27,14 +29,17 @@ private:
     Array<double,1>* constraint;//prodcution constraint
     Array<double,1>* coef;//Khun Thucker coeficient
 
+    void coefheur();//heuristic who update KKT coef
 public:
     //default constructor
     HeurClsp(double* alpha, double* beta, double* prod, double* stor,
         double* consumption, double* setup, double* constraint, int period,
         int product, int verbose, int cycle, double eps, double param);
+    HeurClsp(list alpha, list beta, list prod, list stor,
+        list consumption, list setup, list constraint, int period,
+        int product, int verbose, int cycle, float eps, float param);
     double heursolver(); //solver
     void thomas();//dynamic programming solver based on Thomas's paper
-    void coefheur();//heuristic who update KKT coef
     double objective();//compute objective
 };
 #endif

@@ -1,14 +1,18 @@
-This program is an C++ librairy who implements the heuristic
-described in "Solving large-scale profit maximization 
-capacitated lot-size problems by heuristic methods" by K.K.
-Haugen, A. Olstad and B.I. Pettersen.
+This program is an C++/Python librairy who implements
+the heuristic described in "Solving large-scale profit
+maximization capacitated lot-size problems by heuristic
+methods" by K.K. Haugen, A. Olstad and B.I. Pettersen.
 
 Author: Guillaume Lanquepin <guillaume.lanquepin@himolde.no>
 
 Licence: BSD
 
-Dependencies: Blitz++ ( see http://www.oonumerics.org/blitz/ )
+Dependencies:
+    Blitz++ ( see http://www.oonumerics.org/blitz/ )
+    Boost.Python ( see http://www.boost.org/doc/libs/
+1_39_0/libs/python/doc/index.html)
+    Python C API
 
 Blueprints: 
-    * It runs 
-    * Python an Java interface
+    * test it 
+    * Java interface

@@ -168,7 +168,7 @@ void HeurClsp::coefheur()
     tps = first( consValue(Range(0,period))>(*constraint)(Range(0,toEnd)) );
     while ( (tps < period) & (tps > 0))
     {
-        obj = 0;
+        obj = first((*cons)(Range::all(),tps) == max((*cons)(Range::all(),tps)));
         //while the constraint is violated
         //remove all production for the obj product
         while ( consValue(tps) > (*constraint)(tps) )
@@ -179,7 +179,7 @@ void HeurClsp::coefheur()
             (*storage)(obj, tps) = (*production)(obj,tps);
             //update constraint value
             consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps));
-            obj ++;
+            obj = first((*cons)(Range(obj+1,toEnd),tps) == max((*cons)(Range(obj+1,toEnd),tps)));
         }
         //modify the obj's production to saturate the tps constraint
         (*production)(obj, tps) -= (*alpha)(obj, tps)- (*beta)(obj, tps)*(*price)(obj, tps);

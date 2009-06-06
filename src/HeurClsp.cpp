@@ -156,7 +156,6 @@ void HeurClsp::coefheur()
 {
     Array<double,1> consValue(period);
     secondIndex j;
-    double saturated;
     int obj;
     int tps;
     

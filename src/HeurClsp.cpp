@@ -183,10 +183,10 @@ void HeurClsp::coefheur()
         }
         //modify the obj's production to saturate the tps constraint
         (*production)(obj, tps) -= (*alpha)(obj, tps)- (*beta)(obj, tps)*(*price)(obj, tps);
-        saturated = ( (*constraint)(tps) 
+        (*coef)(tps) = ( (*constraint)(tps) 
             - sum( (*cons)(Range::all(), tps)*(*production)(Range::all(), tps) ) )
             / (*cons)(obj, tps);
-        (*price)(obj, tps) = ( (*alpha)(obj, tps) - saturated ) / (*beta)(obj, tps);
+        (*price)(obj, tps) = ( (*alpha)(obj, tps) - (*coef)(tps) ) / (*beta)(obj, tps);
         (*production)(obj, tps) += (*alpha)(obj, tps) + (*alpha)(obj, tps)*(*price)(obj, tps);
         (*storage)(obj, tps) = max( 0.,(*production)(obj,tps) - (*alpha)(obj,tps)-(*beta)(obj,tps)*(*price)(obj,tps) );
         //find the next violated constaint

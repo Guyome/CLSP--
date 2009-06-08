@@ -21,7 +21,8 @@ HeurClsp::HeurClsp(double* _alpha, double* _beta, double* _prod, double* _stor,
     prod = new Array<double,2>(_prod, shape(product,period), neverDeleteData);
     stor = new Array<double,2>(_stor, shape(product,period), neverDeleteData);
     cons = new Array<double,2>(consumption, shape(product,period), neverDeleteData);
-    setup = new Array<double,2>(_setup, shape(product,period), neverDeleteData);
+    setupcost = new Array<double,2>(_setup, shape(product,period), neverDeleteData);
+    setup = new Array<double,2>(product,period);
     price = new Array<double,2>(product,period);
     production = new Array<double,2>(product,period);
     storage = new Array<double,2>(product,period);
@@ -49,6 +50,7 @@ HeurClsp::HeurClsp(list _alpha, list _beta, list _prod, list _stor,
     prod = new Array<double,2>(product,period);
     stor = new Array<double,2>(product,period);
     cons = new Array<double,2>(product,period);
+    setupcost = new Array<double,2>(product,period);
     setup = new Array<double,2>(product,period);
     price = new Array<double,2>(product,period);
     production = new Array<double,2>(product,period);
@@ -67,7 +69,7 @@ HeurClsp::HeurClsp(list _alpha, list _beta, list _prod, list _stor,
             (*beta)(j,t) = ( extract<double>(_beta[j][t]) );
             (*prod)(j,t) = ( extract<double>(_prod[j][t]) );
             (*stor)(j,t) = ( extract<double>(_stor[j][t]) );
-            (*setup)(j,t) = ( extract<double>(_setup[j][t]) );
+            (*setupcost)(j,t) = ( extract<double>(_setup[j][t]) );
             (*cons)(j,t) = ( extract<double>(consumption[j][t]) );
             (*constraint)(t) = ( extract<double>(_constraint[t]) );
         }
@@ -86,7 +88,7 @@ void HeurClsp::thomas()
 ////OUTPUT
     if (verbose >2)
     {
-        printf("j\tt\tF(t)\t\tInd\n");
+        printf("\nj\tt\tF(t)\t\tInd\n");
         printf("-------------------------------------\n");
     }
 ////OUTPUT
@@ -104,6 +106,9 @@ void HeurClsp::thomas()
         //result for the first period
         (*ind)(j,0) = 0;
         (*price)(j,t)=tprice(t,(int)(*ind)(j,t));
+        (*production)(j,t) = 0.; //initiate production
+        (*production)(j,0) += (*alpha)(j,0)-(*beta)(j,t)*(*price)(j,0);
+        (*storage)(j,t) = max( 0.,(*production)(j,t) - (*alpha)(j,0)-(*beta)(j,0)*(*price)(j,0) );
         for (t = 1; t < period;  t++)
         {
             for (int t0 = 0; t0 <= t; t0++)
@@ -131,7 +136,7 @@ void HeurClsp::thomas()
             (*production)(j,(*ind)(j,t)) += (*alpha)(j,t)-(*beta)(j,t)*(*price)(j,t);
             (*storage)(j,t) = max( 0.,(*production)(j,t) - (*alpha)(j,t)-(*beta)(j,t)*(*price)(j,t) );
         }
-
+        (*setup) = where((*production) > 0,1,0);
     ////OUTPUT
         if (verbose >2)
         {
@@ -147,7 +152,7 @@ void HeurClsp::thomas()
 ////OUPOUT
     if (verbose >2)
     {
-        printf("-------------------------------------\n");
+        printf("-------------------------------------\n\n");
     }
 ////OUTPUT
 }
@@ -155,30 +160,39 @@ void HeurClsp::thomas()
 void HeurClsp::coefheur()
 {
     Array<double,1> consValue(period);
-    secondIndex j;
-    int obj;
+    Array<double,1> sortlist(product);
+    int obj = 0;
     int tps;
-    
-    //find the first violated constaint
+
+    //find the first violated constraint
     for (int t = 0; t < period; t ++)
     {
         consValue(t) = sum( (*cons)(Range::all(),t)*(*production)(Range::all(),t));
     }
     tps = first( consValue(Range(0,period))>(*constraint)(Range(0,toEnd)) );
-    while ( (tps < period) & (tps > 0))
+    while ( (tps < period) & (tps >= 0))
     {
-        obj = first((*cons)(Range::all(),tps) == max((*cons)(Range::all(),tps)));
+        sortlist = (*cons)(Range::all(), tps).copy();
+        sortlist = sortlist*(*setup)(Range::all(), tps);
         //while the constraint is violated
         //remove all production for the obj product
-        while ( consValue(tps) > (*constraint)(tps) )
+        while ( (consValue(tps) > (*constraint)(tps)) & (obj >= 0))
         {
+            obj = first(sortlist == max(sortlist));
+            sortlist(obj) = 0;
             //no demand for the obj product at perdior tps
             (*production)(obj, tps) -= (*alpha)(obj, tps)- (*beta)(obj, tps)*(*price)(obj, tps);
             (*price)(obj, tps) = (*alpha)(obj, tps)/(*beta)(obj, tps);
             (*storage)(obj, tps) = (*production)(obj,tps);
             //update constraint value
             consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps));
-            obj = first((*cons)(Range(obj+1,toEnd),tps) == max((*cons)(Range(obj+1,toEnd),tps)));
+        ////OUPOUT
+            if (verbose >2)
+            {
+                printf("In period %d: cancellation of the request to the product number %d\n",tps,obj);
+            }
+        ////OUTPUT
+
         }
         //modify the obj's production to saturate the tps constraint
         (*production)(obj, tps) -= (*alpha)(obj, tps)- (*beta)(obj, tps)*(*price)(obj, tps);
@@ -186,17 +200,11 @@ void HeurClsp::coefheur()
             - sum( (*cons)(Range::all(), tps)*(*production)(Range::all(), tps) ) )
             / (*cons)(obj, tps);
         (*price)(obj, tps) = ( (*alpha)(obj, tps) - (*coef)(tps) ) / (*beta)(obj, tps);
-        (*production)(obj, tps) += (*alpha)(obj, tps) + (*alpha)(obj, tps)*(*price)(obj, tps);
+        (*production)(obj, tps) += (*alpha)(obj, tps) - (*beta)(obj, tps)*(*price)(obj, tps);
         (*storage)(obj, tps) = max( 0.,(*production)(obj,tps) - (*alpha)(obj,tps)-(*beta)(obj,tps)*(*price)(obj,tps) );
-        //find the next violated constaint
-        tps = first( consValue(Range(tps+1,toEnd))>(*constraint)(Range(tps+1,toEnd)) );
-        
-    ////OUPOUT
-        if (verbose >2)
-        {
-            printf("In period %d: cancellation of the request to the %dth product\n",tps,obj);
-        }
-    ////OUTPUT
+        //find the next violated constraint
+        consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps));
+        tps = first(consValue(Range(tps,period))>(*constraint)(Range(tps,period)));
     }
 }
 
@@ -210,7 +218,7 @@ double HeurClsp::objective()
             * (*price)(j,Range::all())
             - (*prod)(j,Range::all())*(*production)(j,Range::all())
             - (*stor)(j,Range::all())*(*storage)(j,Range::all())
-            //- (*setup)(j,Range::all())*((*production)(j,Range::all) > 0)
+            - (*setup)(j,Range::all())*(*setupcost)(j,Range::all())
             );
     }
     return sum(profit);
@@ -221,22 +229,38 @@ double HeurClsp::heursolver()
     Array<double,1> previouscoef(period);
     double diff, upper, lower;
     int count = 0;
+    firstIndex t;
     diff = eps + 1.;
+
     while ( (diff > eps) & (count < cycle) )
     {
         previouscoef = (*coef);
         //compute lower and upper bound
         thomas();
         upper = objective();
+        //add relaxation to the objective
+        for (int t = 0; t < period; t ++)
+        {
+            upper += (*coef)(t)*( (*constraint)(t)-sum( (*cons)(Range::all(),t)*(*production)(Range::all(),t) ) );
+        }
         coefheur();
         lower = objective();
         //update KKT coefficients
-        (*coef) = param*previouscoef - (1-param)*(*coef);
+        (*coef) = param*previouscoef + (1-param)*(*coef);
         //update stoping conditions 
         diff = upper - lower;
         count ++;
+
+    ////OUPOUT
+        if (verbose >2)
+        {
+            printf("\nITER\t diff\n");
+            printf("%d:\t\t%f\n",count,diff);
+        }
+    ////OUPOUT
+
+
     }
-    
 ////OUPOUT
     if (verbose >1)
     {

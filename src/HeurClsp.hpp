@@ -21,6 +21,7 @@ private:
     Array<double,2>* prod;//production cost
     Array<double,2>* stor;//holding cost
     Array<double,2>* cons;//consumption of ressouce 
+    Array<double,2>* setupcost;//setup cost
     Array<double,2>* setup;//setup structure
     Array<double,2>* price;//setup structure
     Array<double,2>* production;//setup structure

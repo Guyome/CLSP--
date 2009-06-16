@@ -25,6 +25,6 @@ $(TEST):
 	$(CC) -o $@ -c $< $(CFLAGS) -I $(PYDIR)
 
 clean:
-	rm -rf src/*.o *.so
+	rm -rf $(SRCDIR)/*.o *.so
 	@(cd $(TESTDIR) && $(MAKE) $@)
 

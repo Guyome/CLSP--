@@ -31,8 +31,24 @@ HeurClsp::HeurClsp(double* _alpha, double* _beta, double* _prod, double* _stor,
     coef = new Array<double,1>(period);
     //KKT initiate as null
     (*coef) = 0.;
-    
     verbose = _verbose;
+    
+ ////OUTPUT
+    if (verbose >2)
+    {
+        for (int j = 0; j < product; j ++)
+        {
+            printf("Product number: %d",j);
+            printf("\nSlope\t\tInter.\t\tProd. C.\tHold. C.\tSetup C.\tCons. per P.\t Const.\n");
+            printf("-------------------------------------------------------------------------------------\n");
+            for (int t = 0; t < period; t += 1)
+            {
+                printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\n",(*alpha)(j,t),(*beta)(j,t),(*prod)(j,t),(*stor)(j,t),(*setupcost)(j,t),(*cons)(j,t),(*constraint)(t));
+            }
+             printf("-------------------------------------------------------------------------------------\n");
+        }
+    }
+///OUTPUT
 }
 
 HeurClsp::HeurClsp(list _alpha, list _beta, list _prod, list _stor,
@@ -63,6 +79,15 @@ HeurClsp::HeurClsp(list _alpha, list _beta, list _prod, list _stor,
     //import from python object
     for (int j = 0; j < product; j ++)
     {
+    ////OUTPUT
+        if (verbose >2)
+        {
+            printf("Product number: %d",j);
+            printf("\nSlope\t\tInter.\t\tProd. C.\tHold. C.\tSetup C.\tCons. per P.\t Const.\n");
+            printf("-------------------------------------------------------------------------------------\n");
+        }
+    ////OUTPUT
+    
         for (int t = 0; t < period; t += 1)
         {
             (*alpha)(j,t) = ( extract<double>(_alpha[j][t]) );
@@ -72,8 +97,22 @@ HeurClsp::HeurClsp(list _alpha, list _beta, list _prod, list _stor,
             (*setupcost)(j,t) = ( extract<double>(_setup[j][t]) );
             (*cons)(j,t) = ( extract<double>(consumption[j][t]) );
             (*constraint)(t) = ( extract<double>(_constraint[t]) );
+            
+        ///OUTPUT
+            if (verbose >2)
+            {
+                printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\n",(*alpha)(j,t),(*beta)(j,t),(*prod)(j,t),(*stor)(j,t),(*setupcost)(j,t),(*cons)(j,t),(*constraint)(t));
+            }
+        ///OUTPUT
         }
-    }
+    
+     ////OUTPUT
+        if (verbose >2)
+        {
+            printf("-------------------------------------------------------------------------------------\n");
+         }
+    ///OUTPUT
+    }    
 }
 
 void HeurClsp::thomas()

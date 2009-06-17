@@ -241,7 +241,7 @@ void HeurClsp::coefheur()
         (*production)(obj, tps) = (*coef)(tps);
         (*price)(obj, tps) = ( (*alpha)(obj, tps) - (*production)(obj, tps) ) / (*beta)(obj, tps);
         //find the next violated constraint
-        consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps));
+        consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps)) - 1e-6;
         tps = first(consValue(Range(tps,period))>(*constraint)(Range(tps,period)));
         //count the number of loop
         countobj = 0;
@@ -304,7 +304,7 @@ double HeurClsp::heursolver()
         if (verbose >2)
         {
             printf("\nITER\t diff\n");
-             printf("--------------------\n");
+            printf("--------------------\n");
             printf("%d\t\t%f\n",count,diff);
         }
     ////OUPOUT

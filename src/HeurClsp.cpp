@@ -39,11 +39,11 @@ HeurClsp::HeurClsp(double* _alpha, double* _beta, double* _prod, double* _stor,
         for (int j = 0; j < product; j ++)
         {
             printf("Product number: %d",j);
-            printf("\nSlope\t\tInter.\t\tProd. C.\tHold. C.\tSetup C.\tCons. per P.\t Const.\n");
+            printf("T\tSlope\t\tInter.\t\tProd. C.\tHold. C.\tSetup C.\tCons. per P.\t Const.\n");
             printf("-------------------------------------------------------------------------------------\n");
             for (int t = 0; t < period; t += 1)
             {
-                printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\n",(*alpha)(j,t),(*beta)(j,t),(*prod)(j,t),(*stor)(j,t),(*setupcost)(j,t),(*cons)(j,t),(*constraint)(t));
+                printf("%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",t,(*alpha)(j,t),(*beta)(j,t),(*prod)(j,t),(*stor)(j,t),(*setupcost)(j,t),(*cons)(j,t),(*constraint)(t));
             }
              printf("-------------------------------------------------------------------------------------\n");
         }
@@ -82,8 +82,8 @@ HeurClsp::HeurClsp(list _alpha, list _beta, list _prod, list _stor,
     ////OUTPUT
         if (verbose >2)
         {
-            printf("Product number: %d",j);
-            printf("\nSlope\t\tInter.\t\tProd. C.\tHold. C.\tSetup C.\tCons. per P.\t Const.\n");
+            printf("Product number: %d\n",j);
+            printf("T\tSlope\t\tInter.\t\tProd. C.\tHold. C.\tSetup C.\tCons. per P.\t Const.\n");
             printf("-------------------------------------------------------------------------------------\n");
         }
     ////OUTPUT
@@ -101,7 +101,7 @@ HeurClsp::HeurClsp(list _alpha, list _beta, list _prod, list _stor,
         ///OUTPUT
             if (verbose >2)
             {
-                printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\n",(*alpha)(j,t),(*beta)(j,t),(*prod)(j,t),(*stor)(j,t),(*setupcost)(j,t),(*cons)(j,t),(*constraint)(t));
+                printf("%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",t,(*alpha)(j,t),(*beta)(j,t),(*prod)(j,t),(*stor)(j,t),(*setupcost)(j,t),(*cons)(j,t),(*constraint)(t));
             }
         ///OUTPUT
         }
@@ -200,8 +200,7 @@ void HeurClsp::coefheur()
 {
     Array<double,1> consValue(period);
     Array<double,1> sortlist(product);
-    int obj = 0;
-    int tps;
+    int obj,tps;
 
     //find the first violated constraint
     for (int t = 0; t < period; t ++)
@@ -209,38 +208,47 @@ void HeurClsp::coefheur()
         consValue(t) = sum( (*cons)(Range::all(),t)*(*production)(Range::all(),t));
     }
     tps = first( consValue(Range(0,period))>(*constraint)(Range(0,toEnd)) );
+    obj = 0;
     while ( (tps < period) & (tps >= 0))
     {
+
+    ////OUPOUT
+        if (verbose >2)
+        {
+            printf("Constraint violated at time %d (%f > %f)\n",tps,consValue(tps),(*constraint)(tps));
+        }
+    ////OUPOUT
+
         sortlist = (*cons)(Range::all(), tps).copy();
         sortlist = sortlist*(*setup)(Range::all(), tps);
         //while the constraint is violated
         //remove all production for the obj product
-        while ( (consValue(tps) > (*constraint)(tps)) & (obj >= 0))
-        {
-            obj = first(sortlist == max(sortlist));
-            sortlist(obj) = 0;
+        while ( (consValue(tps) > (*constraint)(tps)) & (obj >= 0) )
+        {        
+            //remove this object of the sortlist 
+            obj = first(sortlist(Range(obj,product)) == max(sortlist(Range(obj,product))));
             //no demand for the obj product at perdior tps
-            (*production)(obj, tps) -= (*alpha)(obj, tps)- (*beta)(obj, tps)*(*price)(obj, tps);
+            (*production)(obj, tps) -= (*alpha)(obj, tps) - (*beta)(obj, tps)*(*price)(obj, tps);
             (*price)(obj, tps) = (*alpha)(obj, tps)/(*beta)(obj, tps);
             (*storage)(obj, tps) = (*production)(obj,tps);
             //update constraint value
             consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps));
+
         ////OUPOUT
             if (verbose >2)
             {
-                printf("In period %d: cancellation of the request to the product number %d\n",tps,obj);
+                printf("In period %d: cancellation of the demand for the product number %d\n",tps,obj);
+                printf("New constraint value for period %d: %f\n",tps,consValue(tps));
             }
         ////OUTPUT
 
         }
         //modify the obj's production to saturate the tps constraint
-        (*production)(obj, tps) -= (*alpha)(obj, tps)- (*beta)(obj, tps)*(*price)(obj, tps);
         (*coef)(tps) = ( (*constraint)(tps) 
             - sum( (*cons)(Range::all(), tps)*(*production)(Range::all(), tps) ) )
             / (*cons)(obj, tps);
-        (*price)(obj, tps) = ( (*alpha)(obj, tps) - (*coef)(tps) ) / (*beta)(obj, tps);
-        (*production)(obj, tps) += (*alpha)(obj, tps) - (*beta)(obj, tps)*(*price)(obj, tps);
-        (*storage)(obj, tps) = max( 0.,(*production)(obj,tps) - (*alpha)(obj,tps)-(*beta)(obj,tps)*(*price)(obj,tps) );
+        (*production)(obj, tps) = (*coef)(tps);
+        (*price)(obj, tps) = ( (*alpha)(obj, tps) - (*production)(obj, tps) ) / (*beta)(obj, tps);
         //find the next violated constraint
         consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps));
         tps = first(consValue(Range(tps,period))>(*constraint)(Range(tps,period)));

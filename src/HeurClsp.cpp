@@ -93,28 +93,28 @@ HeurClsp::HeurClsp(list _alpha, list _beta, list _prod, list _stor,
 void HeurClsp::plotVariables()
 {
     printf("\nJ\tT\tPrice\t\tProd.\t\tHold.\t\tSetup\t\tCoef\n");
-    printf("-----------------------------------------------------------------\n");
+    printf("----------------------------------------------------------------\n");
     for(int j = 0; j < product; j ++)
     {
         for(int t = 0; t < period; t ++)
         {
             printf("%d\t%d\t%f\t%f\t%f\t%f\t%f\n",j,t,(*price)(j, t),(*production)(j, t),(*storage)(j, t),(*setup)(j, t),(*coef)(t));
         }
-         printf("-----------------------------------------------------------------\n");
+         printf("----------------------------------------------------------------\n");
     }
 }
 
 void HeurClsp::plotParam()
 {
-    printf("\nJ\tT\tSlope\t\tInter.\t\tProd. C.\tHold. C.\tSetup C.\tCons. per P.\t Const.\n");
-    printf("--------------------------------------------------------------------------------------------------------\n");
+    printf("\nJ\tT\tSlope\t\tInter.\t\tProd. C.\tHold. C.\tSetup C.\tCons. per P.\tConst.\n");
+    printf("----------------------------------------------------------------------------------------------\n");
     for (int j = 0; j < product; j ++)
     {
         for (int t = 0; t < period; t ++)
         {
-            printf("%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",j,t,(*alpha)(j,t),(*beta)(j,t),(*prod)(j,t),(*stor)(j,t),(*setupcost)(j,t),(*cons)(j,t),(*constraint)(t));
+            printf("%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t\t%f\n",j,t,(*alpha)(j,t),(*beta)(j,t),(*prod)(j,t),(*stor)(j,t),(*setupcost)(j,t),(*cons)(j,t),(*constraint)(t));
         }
-        printf("--------------------------------------------------------------------------------------------------------\n");
+        printf("----------------------------------------------------------------------------------------------\n");
     }
 }
 
@@ -143,7 +143,7 @@ void HeurClsp::thomas()
         (*price)(j,t)=tprice(t,(int)(*ind)(j,t));
         (*production)(j,t) = 0.; //initiate production
         (*production)(j,0) += (*alpha)(j,0)-(*beta)(j,t)*(*price)(j,0);
-        (*storage)(j,t) = max( 0.,(*production)(j,t) - (*alpha)(j,0)-(*beta)(j,0)*(*price)(j,0) );
+        (*storage)(j,t) = max( 0.,(*production)(j,t) - (*alpha)(j,0) + (*beta)(j,0)*(*price)(j,0) );
         for (t = 1; t < period;  t++)
         {
             for (int t0 = 0; t0 <= t; t0++)
@@ -169,7 +169,7 @@ void HeurClsp::thomas()
             (*price)(j,t) = tprice(t,(int)(*ind)(j,t));
             (*production)(j,t) = 0.; //initiate production
             (*production)(j,(*ind)(j,t)) += (*alpha)(j,t)-(*beta)(j,t)*(*price)(j,t);
-            (*storage)(j,t) = max( 0.,(*production)(j,t) - (*alpha)(j,t)-(*beta)(j,t)*(*price)(j,t) );
+            (*storage)(j,t) = max( 0.,(*production)(j,t) - (*alpha)(j,t) + (*beta)(j,t)*(*price)(j,t) );
         }
         (*setup) = where((*production) > 0,1,0);
     }
@@ -219,7 +219,6 @@ void HeurClsp::coefheur()
             //no demand for the obj product at perdior tps
             (*production)(obj, tps) -= (*alpha)(obj, tps) - (*beta)(obj, tps)*(*price)(obj, tps);
             (*price)(obj, tps) = (*alpha)(obj, tps)/(*beta)(obj, tps);
-            (*storage)(obj, tps) = (*production)(obj,tps);
             //update constraint value
             consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps));
             //count the number of loop

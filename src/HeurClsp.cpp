@@ -36,17 +36,7 @@ HeurClsp::HeurClsp(double* _alpha, double* _beta, double* _prod, double* _stor,
  ////OUTPUT
     if (verbose >2)
     {
-        for (int j = 0; j < product; j ++)
-        {
-            printf("Product number: %d",j);
-            printf("T\tSlope\t\tInter.\t\tProd. C.\tHold. C.\tSetup C.\tCons. per P.\t Const.\n");
-            printf("-------------------------------------------------------------------------------------\n");
-            for (int t = 0; t < period; t += 1)
-            {
-                printf("%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",t,(*alpha)(j,t),(*beta)(j,t),(*prod)(j,t),(*stor)(j,t),(*setupcost)(j,t),(*cons)(j,t),(*constraint)(t));
-            }
-             printf("-------------------------------------------------------------------------------------\n");
-        }
+        HeurClsp::plotParam();
     }
 ///OUTPUT
 }
@@ -76,19 +66,11 @@ HeurClsp::HeurClsp(list _alpha, list _beta, list _prod, list _stor,
     coef = new Array<double,1>(period);
     //KKT initiate as null
     (*coef) = 0.;
+
     //import from python object
     for (int j = 0; j < product; j ++)
     {
-    ////OUTPUT
-        if (verbose >2)
-        {
-            printf("Product number: %d\n",j);
-            printf("T\tSlope\t\tInter.\t\tProd. C.\tHold. C.\tSetup C.\tCons. per P.\t Const.\n");
-            printf("-------------------------------------------------------------------------------------\n");
-        }
-    ////OUTPUT
-    
-        for (int t = 0; t < period; t += 1)
+        for (int t = 0; t < period; t ++)
         {
             (*alpha)(j,t) = ( extract<double>(_alpha[j][t]) );
             (*beta)(j,t) = ( extract<double>(_beta[j][t]) );
@@ -97,22 +79,43 @@ HeurClsp::HeurClsp(list _alpha, list _beta, list _prod, list _stor,
             (*setupcost)(j,t) = ( extract<double>(_setup[j][t]) );
             (*cons)(j,t) = ( extract<double>(consumption[j][t]) );
             (*constraint)(t) = ( extract<double>(_constraint[t]) );
-            
-        ///OUTPUT
-            if (verbose >2)
-            {
-                printf("%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",t,(*alpha)(j,t),(*beta)(j,t),(*prod)(j,t),(*stor)(j,t),(*setupcost)(j,t),(*cons)(j,t),(*constraint)(t));
-            }
-        ///OUTPUT
         }
-    
-     ////OUTPUT
-        if (verbose >2)
+    }
+
+////OUTPUT
+    if (verbose >2)
+    {
+        HeurClsp::plotParam();
+    }
+///OUTPUT
+}
+
+void HeurClsp::plotVariables()
+{
+    printf("\nJ\tT\tPrice\t\tProd.\t\tHold.\t\tSetup\t\tCoef\n");
+    printf("-----------------------------------------------------------------\n");
+    for(int j = 0; j < product; j ++)
+    {
+        for(int t = 0; t < period; t ++)
         {
-            printf("-------------------------------------------------------------------------------------\n");
-         }
-    ///OUTPUT
-    }    
+            printf("%d\t%d\t%f\t%f\t%f\t%f\t%f\n",j,t,(*price)(j, t),(*production)(j, t),(*storage)(j, t),(*setup)(j, t),(*coef)(t));
+        }
+         printf("-----------------------------------------------------------------\n");
+    }
+}
+
+void HeurClsp::plotParam()
+{
+    printf("\nJ\tT\tSlope\t\tInter.\t\tProd. C.\tHold. C.\tSetup C.\tCons. per P.\t Const.\n");
+    printf("--------------------------------------------------------------------------------------------------------\n");
+    for (int j = 0; j < product; j ++)
+    {
+        for (int t = 0; t < period; t ++)
+        {
+            printf("%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",j,t,(*alpha)(j,t),(*beta)(j,t),(*prod)(j,t),(*stor)(j,t),(*setupcost)(j,t),(*cons)(j,t),(*constraint)(t));
+        }
+        printf("--------------------------------------------------------------------------------------------------------\n");
+    }
 }
 
 void HeurClsp::thomas()
@@ -124,13 +127,6 @@ void HeurClsp::thomas()
     double sumc;
     int t;//current time period
 
-////OUTPUT
-    if (verbose >2)
-    {
-        printf("\nj\tt\tF(t)\t\tInd\n");
-        printf("-------------------------------------\n");
-    }
-////OUTPUT
 
     for(int j = 0; j < product;  j++)
     {
@@ -176,22 +172,12 @@ void HeurClsp::thomas()
             (*storage)(j,t) = max( 0.,(*production)(j,t) - (*alpha)(j,t)-(*beta)(j,t)*(*price)(j,t) );
         }
         (*setup) = where((*production) > 0,1,0);
-    ////OUTPUT
-        if (verbose >2)
-        {
-            for (t = 0; t < period; t++)
-            {
-                printf("%d\t%d\t%f\t%d\n",j+1,t+1,-f(t+1),(int)(*ind)(j,t)+1);
-            }
-        }
-    ////OUTPUT
-
     }
 
 ////OUPOUT
     if (verbose >2)
     {
-        printf("-------------------------------------\n\n");
+        HeurClsp::plotVariables();
     }
 ////OUTPUT
 }
@@ -218,7 +204,7 @@ void HeurClsp::coefheur()
     ////OUPOUT
         if (verbose >2)
         {
-            printf("Constraint violated at time %d (%f > %f)\n",tps,consValue(tps),(*constraint)(tps));
+            printf("\nConstraint violated at time %d (%f > %f)\n",tps,consValue(tps),(*constraint)(tps));
         }
     ////OUPOUT
 
@@ -242,8 +228,8 @@ void HeurClsp::coefheur()
         ////OUPOUT
             if (verbose >2)
             {
-                printf("In period %d: cancellation of the demand for the product number %d\n",tps,obj);
-                printf("New constraint value for period %d: %f\n",tps,consValue(tps));
+                printf("\tIn period %d: cancellation of the demand for the product number %d\n",tps,obj);
+                printf("\tNew constraint value for period %d: %f\n",tps,consValue(tps));
             }
         ////OUTPUT
 
@@ -258,8 +244,17 @@ void HeurClsp::coefheur()
         consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps));
         tps = first(consValue(Range(tps,period))>(*constraint)(Range(tps,period)));
         //count the number of loop
+        countobj = 0;
         counttps ++;
     }
+
+////OUPOUT
+    if (verbose >2)
+    {
+        HeurClsp::plotVariables();
+    }
+////OUTPUT
+
 }
 
 double HeurClsp::objective()
@@ -309,7 +304,8 @@ double HeurClsp::heursolver()
         if (verbose >2)
         {
             printf("\nITER\t diff\n");
-            printf("%d:\t\t%f\n",count,diff);
+             printf("--------------------\n");
+            printf("%d\t\t%f\n",count,diff);
         }
     ////OUPOUT
 
@@ -318,7 +314,7 @@ double HeurClsp::heursolver()
 ////OUPOUT
     if (verbose >1)
     {
-        printf("Last objective:\t\t\t %f\n",lower);
+        printf("\nLast objective:\t\t\t %f\n",lower);
         printf("Number of iteration:\t\t\t %d\n",count);
         printf("Difference between upper and lower bound:\t %f\n",diff);
     }

@@ -39,8 +39,11 @@ public:
     HeurClsp(list alpha, list beta, list prod, list stor,
         list consumption, list setup, list constraint, int period,
         int product, int verbose, int cycle, float eps, float param);
-    double heursolver(); //solver
+    double heursolver();//solver
     void thomas();//dynamic programming solver based on Thomas's paper
     double objective();//compute objective
+    
+    void plotParam();//plot all parameters
+    void plotVariables();//plot all varaibles
 };
 #endif

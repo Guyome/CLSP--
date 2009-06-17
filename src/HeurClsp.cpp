@@ -200,7 +200,7 @@ void HeurClsp::coefheur()
 {
     Array<double,1> consValue(period);
     Array<double,1> sortlist(product);
-    int obj,tps;
+    int obj,tps,counttps,countobj;
 
     //find the first violated constraint
     for (int t = 0; t < period; t ++)
@@ -208,8 +208,11 @@ void HeurClsp::coefheur()
         consValue(t) = sum( (*cons)(Range::all(),t)*(*production)(Range::all(),t));
     }
     tps = first( consValue(Range(0,period))>(*constraint)(Range(0,toEnd)) );
+    //initiate to zero
     obj = 0;
-    while ( (tps < period) & (tps >= 0))
+    countobj = 0;
+    counttps = 0;
+    while ( (tps < period) & (tps >= 0) & (counttps < period))
     {
 
     ////OUPOUT
@@ -223,7 +226,7 @@ void HeurClsp::coefheur()
         sortlist = sortlist*(*setup)(Range::all(), tps);
         //while the constraint is violated
         //remove all production for the obj product
-        while ( (consValue(tps) > (*constraint)(tps)) & (obj >= 0) )
+        while ( (consValue(tps) > (*constraint)(tps)) & (obj >= 0) & (countobj < product))
         {        
             //remove this object of the sortlist 
             obj = first(sortlist(Range(obj,product)) == max(sortlist(Range(obj,product))));
@@ -233,6 +236,8 @@ void HeurClsp::coefheur()
             (*storage)(obj, tps) = (*production)(obj,tps);
             //update constraint value
             consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps));
+            //count the number of loop
+            countobj ++;
 
         ////OUPOUT
             if (verbose >2)
@@ -252,6 +257,8 @@ void HeurClsp::coefheur()
         //find the next violated constraint
         consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps));
         tps = first(consValue(Range(tps,period))>(*constraint)(Range(tps,period)));
+        //count the number of loop
+        counttps ++;
     }
 }
 

@@ -314,6 +314,16 @@ double HeurClsp::heursolver()
 
     while ( (diff > eps) & (count < cycle) )
     {
+
+    ////OUPOUT
+        if (verbose >2)
+        {
+            printf("\nITER\t diff\n");
+            printf("--------------------\n");
+            printf("%d\t\t%f\n",count,diff);
+        }
+    ////OUPOUT
+
         previouscoef = (*coef);
         //compute lower and upper bound
         thomas();
@@ -330,17 +340,6 @@ double HeurClsp::heursolver()
         //update stoping conditions 
         diff = upper - lower;
         count ++;
-
-    ////OUPOUT
-        if (verbose >2)
-        {
-            printf("\nITER\t diff\n");
-            printf("--------------------\n");
-            printf("%d\t\t%f\n",count,diff);
-        }
-    ////OUPOUT
-
-
     }
 ////OUPOUT
     if (verbose >1)

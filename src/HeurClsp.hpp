@@ -42,6 +42,7 @@ public:
     double heursolver();//solver
     void thomas();//dynamic programming solver based on Thomas's paper
     double objective();//compute objective
+    bool feasible();//return true if the current state are feasible
     
     void plotParam();//plot all parameters
     void plotVariables();//plot all varaibles

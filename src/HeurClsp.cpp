@@ -202,12 +202,10 @@ void HeurClsp::coefheur()
     {
         consValue(t) = sum( (*cons)(Range::all(),t)*(*production)(Range::all(),t));
     }
-    tps = first( consValue(Range(0,period))>(*constraint)(Range(0,toEnd)) );
     //initiate to zero
-    obj = 0;
-    countobj = 0;
+    tps = first( consValue > (*constraint) );
     counttps = 0;
-    while ( (tps < period) & (tps >= 0) & (counttps < period))
+    while ( (tps >= 0) & (counttps < period))
     {
 
     ////OUPOUT
@@ -217,19 +215,20 @@ void HeurClsp::coefheur()
         }
     ////OUPOUT
 
-        sortlist = (*cons)(Range::all(), tps).copy();
-        sortlist = sortlist*(*setup)(Range::all(), tps);
+        sortlist = (*cons)(Range::all(), tps)*(*setup)(Range::all(), tps);
         //while the constraint is violated
         //remove all production for the obj product
+        obj = 0;
+        countobj = 0;
         while ( (consValue(tps) > (*constraint)(tps)) & (obj >= 0) & (countobj < product))
         {        
             //remove this object of the sortlist 
             obj = first(sortlist(Range(obj,product)) == max(sortlist(Range(obj,product))));
+            linkedproduct = (*ind)(obj, Range::all()).copy();
+            nblink = count(linkedproduct == tps);
             //search all time period who are producted in tps (see thomas)
             t0 = tps;
             countt0 = 0;
-            linkedproduct = (*ind)(obj, Range::all()).copy();
-            nblink = count(linkedproduct == tps);
             while ( (consValue(tps) > (*constraint)(tps)) & (countt0 < nblink))
             {
                 //no demand for the obj product at perdior tps
@@ -273,9 +272,8 @@ void HeurClsp::coefheur()
     ////OUPOUT
         
         //find the next violated constraint
-        tps = first(consValue(Range(tps,period))>(*constraint)(Range(tps,period)));
+        tps = first( consValue > (*constraint) );
         //count the number of loop
-        countobj = 0;
         counttps ++;
     }
 
@@ -302,6 +300,16 @@ double HeurClsp::objective()
             );
     }
     return sum(profit);
+}
+
+bool HeurClsp::feasible()
+{
+    Array<double,1> consValue(period);
+    for (int t = 0; t < period; t ++)
+    {
+        consValue(t) = sum( (*cons)(Range::all(),t)*(*production)(Range::all(),t));
+    }
+    return all( consValue <= (*constraint) );
 }
 
 double HeurClsp::heursolver()
@@ -333,11 +341,20 @@ double HeurClsp::heursolver()
         {
             upper += (*coef)(t)*( (*constraint)(t)-sum( (*cons)(Range::all(),t)*(*production)(Range::all(),t) ) );
         }
-        coefheur();
-        lower = objective();
-        //update KKT coefficients
-        (*coef) = param*previouscoef + (1-param)*(*coef);
-        //update stoping conditions 
+        //stop iteration if upper bound is feasible
+        if (HeurClsp::feasible())
+        {
+            lower = upper;
+            count = cycle;
+        }
+        else
+        {
+            coefheur();
+            lower = objective();
+            //update KKT coefficients
+            (*coef) = param*previouscoef + (1-param)*(*coef);
+            //update stoping conditions 
+        }
         diff = upper - lower;
         count ++;
     }

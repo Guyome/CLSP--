@@ -215,15 +215,17 @@ void HeurClsp::coefheur()
         }
     ////OUPOUT
 
-        sortlist = (*cons)(Range::all(), tps)*(*setup)(Range::all(), tps);
         //while the constraint is violated
         //remove all production for the obj product
+        //order product per consumption
+        sortlist = (*cons)(Range::all(), tps)*(*setup)(Range::all(), tps);
         obj = 0;
-        countobj = 0;
+        countobj = 0; //initiate counter
         while ( (consValue(tps) > (*constraint)(tps)) & (obj >= 0) & (countobj < product))
         {        
-            //remove this object of the sortlist 
-            obj = first(sortlist(Range(obj,product)) == max(sortlist(Range(obj,product))));
+            //selecte the product with the bigest consumption
+            obj = max(maxIndex(sortlist));
+            //compute the number of time period who are produce in tps
             linkedproduct = (*ind)(obj, Range::all()).copy();
             nblink = count(linkedproduct == tps);
             //search all time period who are producted in tps (see thomas)
@@ -231,12 +233,14 @@ void HeurClsp::coefheur()
             countt0 = 0;
             while ( (consValue(tps) > (*constraint)(tps)) & (countt0 < nblink))
             {
-                //no demand for the obj product at perdior tps
+                //no demand for the obj product at period tps
                 (*production)(obj, tps) -= (*alpha)(obj, t0) - (*beta)(obj, t0)*(*price)(obj, t0);
+                //update storage if we have hold something
                 if ( t0 > tps )
                 {
                     (*storage)(obj, tps) -= (*alpha)(obj, t0) - (*beta)(obj, t0)*(*price)(obj, t0);
                 }
+                //price out
                 (*price)(obj, t0) = (*alpha)(obj, t0)/(*beta)(obj, t0);
                 //update constraint value
                 consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps));
@@ -247,13 +251,13 @@ void HeurClsp::coefheur()
                     printf("\tIn period %d: drop the object number %d producted for the period %d\n",tps,obj,t0);
                 }
             ////OUTPUT
-            
-                //update t0
+                //update loop stoping condition
                 linkedproduct(t0) = -1;
                 t0 = first(linkedproduct == tps);
                 countt0 ++;
             }
             //count the number of loop
+            sortlist(obj) = -1;
             countobj ++;
         }
         //modify the obj's production to saturate the tps constraint
@@ -262,7 +266,7 @@ void HeurClsp::coefheur()
             / (*cons)(obj, tps);
         (*production)(obj, tps) = (*coef)(tps);
         (*price)(obj, tps) = ( (*alpha)(obj, tps) - (*production)(obj, tps) ) / (*beta)(obj, tps);
-        consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps)) - 1e-6;
+        consValue(tps) = sum( (*cons)(Range::all(),tps)*(*production)(Range::all(),tps));
 
     ////OUPOUT
         if (verbose >2)

@@ -7,43 +7,6 @@
 using namespace blitz;
 using namespace boost::python;
 
-HeurClsp::HeurClsp(double* _alpha, double* _beta, double* _prod, double* _stor,
-        double* consumption, double* _setup, double* _constraint, int _period,
-        int _product, int _verbose, int _cycle, double _eps, double _param)
-{
-    period = _period;
-    product = _product;
-    cycle = _cycle;
-    eps = _eps;
-    param = _param;
-    verbose = _verbose;
-    alpha = new Array<double,2>(_alpha, shape(product,period), neverDeleteData);
-    beta = new Array<double,2>(_beta, shape(product,period), neverDeleteData);
-    prod = new Array<double,2>(_prod, shape(product,period), neverDeleteData);
-    stor = new Array<double,2>(_stor, shape(product,period), neverDeleteData);
-    cons = new Array<double,2>(consumption, shape(product,period), neverDeleteData);
-    setupcost = new Array<double,2>(_setup, shape(product,period), neverDeleteData);
-    setup = new Array<double,2>(product,period);
-    price = new Array<double,2>(product,period);
-    production = new Array<double,2>(product,period);
-    storage = new Array<double,2>(product,period);
-    ind = new Array<int,2>(product,period);
-    constraint = new Array<double,1>(_constraint, shape(period), neverDeleteData);
-    coef = new Array<double,1>(period);
-    //initial point
-    (*coef) = 0.;//KKT initiated as null
-    (*storage) = 0;
-    (*production) = 0;
-    (*price) = alpha->copy();
-    
- ////OUTPUT
-    if (verbose >2)
-    {
-        HeurClsp::plotParam();
-    }
-///OUTPUT
-}
-
 HeurClsp::HeurClsp(list _alpha, list _beta, list _prod, list _stor,
         list consumption, list _setup, list _constraint, int _period,
         int _product, int _verbose, int _cycle, float _eps, float _param)
@@ -124,6 +87,53 @@ void HeurClsp::plotParam()
         }
         printf("----------------------------------------------------------------------------------------------\n");
     }
+}
+
+list HeurClsp::ArrayToList(Array<double,2> array)
+{
+    list row;
+    list col;
+    for (int j = 0; j < product; j ++)
+    {
+        col = list();
+        for (int t = 0; t < period; t ++)
+        {
+            col.append( array(j,t) );
+        }
+        row.append( col );
+    }
+    
+    return row;
+}
+
+list HeurClsp::getPrice()
+{
+    return ArrayToList((*price));
+}
+
+list HeurClsp::getProd()
+{
+    return ArrayToList((*production));
+}
+
+list HeurClsp::getHold()
+{
+    return ArrayToList((*storage));
+}
+
+list HeurClsp::getSetup()
+{
+    return ArrayToList((*setup));
+}
+
+list HeurClsp::getCoef()
+{
+    list col;
+    for (int t = 0; t < period; t ++)
+    {
+            col.append( (*coef)(t) );
+    }
+    return col;
 }
 
 void HeurClsp::thomas()

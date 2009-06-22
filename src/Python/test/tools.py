@@ -63,32 +63,32 @@ def importdata(address):
     "Constraint";35;40;42;24
     """
     try:
-        inputcsv = csv.reader(open(address, "r"), delimiter=";", lineterminator="\n")
+        inputcsv = csv.reader(open(address, "r"), delimiter=";", lineterminator="\n", quoting=csv.QUOTE_NONNUMERIC)
     except IOError:
         print "File not exists or is unreadable, please check it."
         exit(1)
 
-    data = list() # all data
+    data = tuple() # all data
     item = list() # each tabular
     count = 0
     subcount = 0
     try:
         for row in inputcsv:
             if count < 2 : # read Time period and number of product
-                data.append(int(row[1]))
+                data += (int(row[1]),)
             else :
                 item.append(row[1:])
                 subcount +=1 
                 if subcount == data[1]:
-                    data.append(item)
+                    data += (item,)
                     item = list()
                     subcount = 0
             count += 1
         if (data[1] > 1):
-            data.append(item) # manage the last tabular
+            data += (item[0],) # manage the last tabular
     except:
         print "File is not well formated, please correct it."
-        exit('file %s, line %d' % (filename, inputcsv.line_num))
+        exit('file %s, line %d' % (address, inputcsv.line_num))
     return data
 
 def exportdata(address,slope, intercept, prodcost, holdcost,
@@ -114,7 +114,7 @@ def exportdata(address,slope, intercept, prodcost, holdcost,
     "Constraint";35;40;42;24
     """
     try:
-        outputcsv = csv.writer(open(address, "w"), delimiter=";", lineterminator="\n")
+        outputcsv = csv.writer(open(address, "w"), delimiter=";", lineterminator="\n", quoting=csv.QUOTE_NONNUMERIC)
     except IOError:
         print "Impossible to write or create the file, please check it."
         exit(1)
@@ -124,7 +124,10 @@ def exportdata(address,slope, intercept, prodcost, holdcost,
     data = {'Slope' : slope, 'Intercept' : intercept,
         'Setup cost' :setupcost, 'Storage cost' : holdcost,
         'Production cost' : prodcost, 'Consuption' : consumption}
-    for item in data.keys():
+    names = ['Slope', 'Intercept',
+        'Setup cost', 'Storage cost',
+        'Production cost', 'Consuption']
+    for item in names:
         for j in xrange(nb_obj):
             if j == 0:
                 row = [item]

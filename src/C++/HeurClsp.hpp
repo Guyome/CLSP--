@@ -29,6 +29,7 @@ private:
     Array<double,1>* coef;//Khun Thucker coeficient
 
     void coefheur();//heuristic who update KKT coef
+    double** ArrayToPtr(Array<double,2> array);//fonction to convert blitz array to double pointor
 public:
     //default constructor
     HeurClsp(double* alpha, double* beta, double* prod, double* stor,
@@ -38,7 +39,14 @@ public:
     void thomas();//dynamic programming solver based on Thomas's paper
     double objective();//compute objective
     bool feasible();//return true if the current state are feasible
-    
+
+    //methods to get variables;
+    double** getPrice();
+    double** getProd();
+    double** getHold();
+    double** getSetup();
+    double* getCoef();
+
     void plotParam();//plot all parameters
     void plotVariables();//plot all varaibles
 };

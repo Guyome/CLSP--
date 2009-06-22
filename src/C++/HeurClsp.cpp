@@ -70,6 +70,52 @@ void HeurClsp::plotParam()
     }
 }
 
+double** HeurClsp::ArrayToPtr(Array<double,2> array)
+{
+    double** ptr;
+    ptr = new double*[product];
+    for (int j = 0; j < product; j ++)
+    {
+        ptr[j] = new double[period];
+        for (int t = 0; t < period; t ++)
+        {
+            ptr[j][t] = array(j,t);
+        }
+    }
+    return ptr;
+}
+
+double** HeurClsp::getPrice()
+{
+    return ArrayToPtr((*price));
+}
+
+double** HeurClsp::getProd()
+{
+    return ArrayToPtr((*production));
+}
+
+double** HeurClsp::getHold()
+{
+    return ArrayToPtr((*storage));
+}
+
+double** HeurClsp::getSetup()
+{
+    return ArrayToPtr((*setup));
+}
+
+double* HeurClsp::getCoef()
+{
+    double* ptr;
+    ptr = new double[period];
+    for (int t = 0; t < period; t ++)
+    {
+            ptr[t] = (*coef)(t);
+    }
+    return ptr;
+}
+
 void HeurClsp::thomas()
 {
     Array<double,1> c(period);//cost function

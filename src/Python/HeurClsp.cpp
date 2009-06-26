@@ -3,13 +3,17 @@
 #include <blitz/array.h>
 #include <algorithm>
 #include "HeurClsp.hpp"
+#include "QPSolver.hpp"
+#include "IpIpoptApplication.hpp"
+#include "IpSolveStatistics.hpp"
 
 using namespace blitz;
-using namespace boost::python;
+using namespace Ipopt;
 
-HeurClsp::HeurClsp(list _alpha, list _beta, list _prod, list _stor,
-        list consumption, list _setup, list _constraint, int _period,
-        int _product, int _verbose, int _cycle, float _eps, float _param)
+HeurClsp::HeurClsp(boost::python::list _alpha, boost::python::list _beta, 
+    boost::python::list _prod, boost::python::list _stor, boost::python::list consumption,
+    boost::python::list _setup, boost::python::list _constraint, int _period,
+    int _product, int _verbose, int _cycle, float _eps, float _param)
 {
     period = _period;
     product = _product;
@@ -89,13 +93,13 @@ void HeurClsp::plotParam()
     }
 }
 
-list HeurClsp::ArrayToList(Array<double,2> array)
+boost::python::list HeurClsp::ArrayToList(Array<double,2> array)
 {
-    list row;
-    list col;
+    boost::python::list row;
+    boost::python::list col;
     for (int j = 0; j < product; j ++)
     {
-        col = list();
+        col = boost::python::list();
         for (int t = 0; t < period; t ++)
         {
             col.append( array(j,t) );
@@ -106,29 +110,29 @@ list HeurClsp::ArrayToList(Array<double,2> array)
     return row;
 }
 
-list HeurClsp::getPrice()
+boost::python::list HeurClsp::getPrice()
 {
     return ArrayToList((*price));
 }
 
-list HeurClsp::getProd()
+boost::python::list HeurClsp::getProd()
 {
     return ArrayToList((*production));
 }
 
-list HeurClsp::getHold()
+boost::python::list HeurClsp::getHold()
 {
     return ArrayToList((*storage));
 }
 
-list HeurClsp::getSetup()
+boost::python::list HeurClsp::getSetup()
 {
     return ArrayToList((*setup));
 }
 
-list HeurClsp::getCoef()
+boost::python::list HeurClsp::getCoef()
 {
-    list col;
+    boost::python::list col;
     for (int t = 0; t < period; t ++)
     {
             col.append( (*coef)(t) );
@@ -298,6 +302,43 @@ void HeurClsp::coefheur()
     }
 ////OUTPUT
 
+}
+
+void HeurClsp::coefQP()
+{
+    //create an instance of QPSolver
+    QPSolver* problem = new QPSolver((*alpha),(*beta),(*prod),(*stor),
+        (*cons),(*setup),(*constraint),period,product);
+    SmartPtr<TNLP> mynlp = problem;
+    //create an instance of the IpoptApplication
+    SmartPtr<IpoptApplication> app = new IpoptApplication();
+    //initialize the IpoptApplication and process the options
+    ApplicationReturnStatus status;
+    //set verbosity and derivative test
+    app->Options()->SetIntegerValue("print_level", verbose);
+    app->Options()->SetStringValue("derivative_test","second-order");
+    //run QPSolver
+    status = app->Initialize();
+    if (status != Solve_Succeeded) 
+    {
+        //solve
+        status = app->OptimizeTNLP(mynlp);
+        if ( status == Solve_Succeeded ) 
+        {
+            //get back variables
+            (*price) = problem -> getPrice();
+            (*production) = problem -> getProd();
+            (*storage) = problem -> getStor();
+            (*coef) = problem -> getCoef();
+        }
+    }
+
+////OUPOUT
+    if (verbose >2)
+    {
+        HeurClsp::plotVariables();
+    }
+////OUTPUT
 }
 
 void HeurClsp::subproblem()

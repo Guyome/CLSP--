@@ -34,17 +34,20 @@ private:
     Array<double,1>* coef;//Khun Thucker coeficient
 
     void coefheur();//heuristic who update KKT coef
+    void coefQP();//QP solver who update KKT coef
+    void subproblem();//heurcoef for discret price
+
     list ArrayToList(Array<double,2> array);//function to convert blitz array to python list
 public:
     //default constructor
     HeurClsp(list alpha, list beta, list prod, list stor,
         list consumption, list setup, list constraint, int period,
         int product, int verbose, int cycle, float eps, float param);
-    double heursolver();//solver
-    void thomas();//dynamic programming solver based on Thomas's paper
+    double heursolver();//PCLSP solver
+    void thomas();//CLSP solver based on Thomas's paper
     double objective();//compute objective
     bool feasible();//return true if the current state are feasible
-    void subproblem();//heurcoef for discret price
+
     
     //methods to get variables;
     list getPrice();

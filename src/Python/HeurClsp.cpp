@@ -34,7 +34,8 @@ HeurClsp::HeurClsp(boost::python::list _alpha, boost::python::list _beta,
     ind = new Array<int,2>(product,period);
     constraint = new Array<double,1>(period);
     coef = new Array<double,1>(period);
-    void (HeurClsp::*updatekkt) () = &HeurClsp::coefQP;//pointor to function
+    void (HeurClsp::*updatekkt) ();
+    this -> updatekkt = &HeurClsp::coefQP;//pointor to function
 
     //import from python object
     for (int j = 0; j < product; j ++)

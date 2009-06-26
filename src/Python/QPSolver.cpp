@@ -77,7 +77,6 @@ bool QPSolver::get_bounds_info(Index n, Number* x_l, Number* x_u,
     {
         g_l[t+period*product] = 0.0;
         g_u[t+period*product] = (*constraint)(t);
-       // printf("constraint[%d]=%f\n",t,(*constraint)(t));
     }
     return true;
 }
@@ -252,7 +251,6 @@ bool QPSolver::eval_h(Index n, const Number* x, bool new_x,
                    bool new_lambda, Index nele_hess, Index* iRow,
                    Index* jCol, Number* values)
 {
-    //printf("\n");
     if (values == NULL)
     {
         // the hessian for this problem is actually dense
@@ -298,17 +296,17 @@ void QPSolver::finalize_solution(SolverReturn status,
 }
 
 Array<double,1> QPSolver::getCoef(){
-    return varcoef -> copy();
+    return (*varcoef);
 }
 
 Array<double,2> QPSolver::getPrice(){
-    return varprice -> copy();
+    return (*varprice);
 }
 
 Array<double,2> QPSolver::getProd(){
-    return varprod -> copy();
+    return (*varprod);
 }
 
 Array<double,2> QPSolver::getStor(){
-    return varstor -> copy();
+    return (*varstor);
 }

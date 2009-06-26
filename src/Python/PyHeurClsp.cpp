@@ -14,5 +14,6 @@ BOOST_PYTHON_MODULE(heurclsp)
         .def("thomas", &HeurClsp::thomas)
         .def("heursolver", &HeurClsp::heursolver)
         .def("objective", &HeurClsp::objective)
+        .def("useheur", &HeurClsp::setHeur)
     ;
 }

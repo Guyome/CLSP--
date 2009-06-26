@@ -33,6 +33,7 @@ private:
     Array<int,2>* ind;//index structure from thomas algorithm
     Array<double,1>* coef;//Khun Thucker coeficient
 
+    void (HeurClsp::*updatekkt) ();
     void coefheur();//heuristic who update KKT coef
     void coefQP();//QP solver who update KKT coef
     void subproblem();//heurcoef for discret price
@@ -47,6 +48,7 @@ public:
     void thomas();//CLSP solver based on Thomas's paper
     double objective();//compute objective
     bool feasible();//return true if the current state are feasible
+    void setHeur();//use heurcoef in heursolver
 
     
     //methods to get variables;

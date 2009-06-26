@@ -34,7 +34,7 @@ HeurClsp::HeurClsp(boost::python::list _alpha, boost::python::list _beta,
     ind = new Array<int,2>(product,period);
     constraint = new Array<double,1>(period);
     coef = new Array<double,1>(period);
-
+    void (HeurClsp::*updatekkt) () = &HeurClsp::coefQP;//pointor to function
 
     //import from python object
     for (int j = 0; j < product; j ++)
@@ -138,6 +138,11 @@ boost::python::list HeurClsp::getCoef()
             col.append( (*coef)(t) );
     }
     return col;
+}
+
+void HeurClsp::setHeur()
+{
+    updatekkt = &HeurClsp::coefheur;
 }
 
 void HeurClsp::thomas()
@@ -438,7 +443,7 @@ double HeurClsp::heursolver()
         }
         else
         {
-            coefheur();
+            (*this.*updatekkt)();
             lower = objective();
             //update KKT coefficients
             (*coef) = param*previouscoef + (1-param)*(*coef);

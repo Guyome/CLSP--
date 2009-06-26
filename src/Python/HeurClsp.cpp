@@ -300,6 +300,40 @@ void HeurClsp::coefheur()
 
 }
 
+void HeurClsp::subproblem()
+{
+    Array<double,1> diff(period);
+    Array<double,2> sort(product,period);
+    double increment;
+    int tps,maxtps,obj;
+
+    sort = cons -> copy();
+    for (int t = 0; t < period; t ++)
+    {
+        (*production)(Range::all(),t) = (*alpha)(Range::all(),t)- (*beta)(Range::all(),t)*(*price)(Range::all(),t);
+        diff(t) = sum((*cons)(Range::all(),t)*(*production)(Range::all(),t)) - (*constraint)(t);
+        maxtps = t-1;
+        while ( (diff(t) > 0) & (maxtps > 0) )
+        {
+            tps = last( diff(Range(0,maxtps)) < 0 );
+            while ( (diff(t) > 0) & (diff(tps) <= 0) )
+            {
+                obj = max(maxIndex(sort(Range::all(),tps)));
+                increment = min(diff(tps)/(*cons)(obj,tps),diff(t)/(*cons)(obj,t));
+                (*production)(obj,tps) += increment;
+                (*storage)(obj, tps) += increment;
+                (*production)(obj,t) -= increment;
+                (*storage)(obj, t) = max(0., (*storage)(obj, t) - increment);
+                diff(tps) += increment*(*cons)(obj,tps);
+                diff(t) -= increment*(*cons)(obj,t);
+                sort(obj,tps) = -1;
+            }
+            maxtps --;
+        }
+    }
+    
+}
+
 double HeurClsp::objective()
 {
     Array<double,1> profit(product);

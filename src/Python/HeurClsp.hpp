@@ -44,6 +44,7 @@ public:
     void thomas();//dynamic programming solver based on Thomas's paper
     double objective();//compute objective
     bool feasible();//return true if the current state are feasible
+    void subproblem();//heurcoef for discret price
     
     //methods to get variables;
     list getPrice();

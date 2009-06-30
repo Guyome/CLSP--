@@ -1,30 +1,25 @@
 CC=gcc
 CFLAGS=-W -Wall -ansi -pedantic -O3 -fPIC
-LDFLAGS=-shared -lblitz -lboost_python -lpython2.6
-SRCDIR=src
+LDFLAGS=-shared -lblitz
+SRCDIR=./
 LIB=libclsp.so
-PYLIB=heurclsp.so
-PYDIR=/usr/include/python2.6
 TEST=example
 TESTDIR=$(SRCDIR)/test
 SRC= $(wildcard $(SRCDIR)/*.cpp)
 OBJ= $(SRC:.cpp=.o)
 
-all: $(LIB) $(TEST) $(PYLIB)
+all: $(LIB) $(TEST)
 
-$(LIB): $(SRCDIR)/HeurClsp.o
-	$(CC) -o $@ $^ $(LDFLAGS)
-
-$(PYLIB): $(OBJ)
+$(LIB): $(SRCDIR)/$(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 $(TEST):
 	@(cd $(TESTDIR) && $(MAKE) $@)
 
 %.o: %.cpp
-	$(CC) -o $@ -c $< $(CFLAGS) -I $(PYDIR)
+	$(CC) -o $@ -c $< $(CFLAGS)
 
 clean:
-	rm -rf src/*.o *.so
+	rm -rf $(SRCDIR)/*.o *.so
 	@(cd $(TESTDIR) && $(MAKE) $@)
 

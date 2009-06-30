@@ -34,17 +34,17 @@ private:
     Array<double,1>* coef;//Khun Thucker coeficient
 
     void (HeurClsp::*updatekkt) ();
-    void (HeurClsp::*cost) ();
-    void (HeurClsp::*price) ();
+    double (HeurClsp::*cost) (blitz::Array<double, 2>, int, int, int);
+    double (HeurClsp::*dpprice) (int, int, int);
 
     void coefheur();//heuristic who update KKT coef
     void coefQP();//QP solver who update KKT coef
     void subproblem();//heurcoef for discret price
 
-    double tcost(Array<double,2> tprice, int t, int t0);
-    double wwcost(Array<double,2> tprice, int t, int t0);
-    double tprice(int t, int t0);
-    double wwprice(int t, int t0);
+    double tcost(Array<double,2> tprice, int t, int t0, int j);
+    double wwcost(Array<double,2> tprice, int t, int t0, int j);
+    double tprice(int t, int t0, int j);
+    double wwprice(int t, int t0, int j);
 
     list ArrayToList(Array<double,2> array);//function to convert blitz array to python list
 
@@ -53,6 +53,8 @@ public:
     HeurClsp(list alpha, list beta, list prod, list stor,
         list consumption, list setup, list constraint, int period,
         int product, int verbose, int cycle, float eps, float param);
+    //copy constructor
+    HeurClsp(const HeurClsp& origin);
     double heursolver();//PCLSP solver
     void thomas();//CLSP solver based on Thomas's paper
     double objective();//compute objective

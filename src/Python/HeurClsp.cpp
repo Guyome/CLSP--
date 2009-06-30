@@ -35,10 +35,10 @@ HeurClsp::HeurClsp(boost::python::list _alpha, boost::python::list _beta,
     constraint = new Array<double,1>(period);
     coef = new Array<double,1>(period);
     void (HeurClsp::*updatekkt) ();
-    void (HeurClsp::*cost) ();
-    void (HeurClsp::*price) ();
+    double (HeurClsp::*cost) (Array<double, 2>, int, int, int);
+    double (HeurClsp::*dpprice) (int, int, int);
     this -> cost = &HeurClsp::tcost;
-    this -> price = &HeurClsp::tprice;
+    this -> dpprice = &HeurClsp::tprice;
     this -> updatekkt = &HeurClsp::coefQP;//pointor to function
 
     //import from python object
@@ -70,7 +70,7 @@ HeurClsp::HeurClsp(boost::python::list _alpha, boost::python::list _beta,
 ///OUTPUT
 }
 
-HeurClsp::HeurClsp(HeurClsp origin)
+HeurClsp::HeurClsp(const HeurClsp& origin)
 {
     period = origin.period;
     product = origin.product;
@@ -78,13 +78,13 @@ HeurClsp::HeurClsp(HeurClsp origin)
     cycle = origin.cycle;
     eps = origin.eps;
     param = origin.param;
-    alpha = new Array<double,2>(origin.alpha);
-    beta = new Array<double,2>(origin.beta);
-    prod = new Array<double,2>(origin.prod);
-    stor = new Array<double,2>(origin.stor);
-    cons = new Array<double,2>(origin.cons);
-    setupcost = new Array<double,2>(origin.setupcost);
-    constraint = new Array<double,1>(origin.constraint);
+    alpha = new Array<double,2>((*origin.alpha));
+    beta = new Array<double,2>((*origin.beta));
+    prod = new Array<double,2>((*origin.prod));
+    stor = new Array<double,2>((*origin.stor));
+    cons = new Array<double,2>((*origin.cons));
+    setupcost = new Array<double,2>((*origin.setupcost));
+    constraint = new Array<double,1>((*origin.constraint));
     setup = new Array<double,2>(product,period);
     price = new Array<double,2>(product,period);
     production = new Array<double,2>(product,period);
@@ -92,10 +92,10 @@ HeurClsp::HeurClsp(HeurClsp origin)
     ind = new Array<int,2>(product,period);
     coef = new Array<double,1>(period);
     void (HeurClsp::*updatekkt) ();
-    void (HeurClsp::*cost) ();
-    void (HeurClsp::*price) ();
+    double (HeurClsp::*cost) (Array<double, 2>, int, int, int);
+    double (HeurClsp::*dpprice) (int, int, int);
     this -> cost = &HeurClsp::tcost;
-    this -> price = &HeurClsp::tprice;
+    this -> dpprice = &HeurClsp::tprice;
     this -> updatekkt = &HeurClsp::coefQP;
 
     //initial point
@@ -185,7 +185,7 @@ void HeurClsp::setHeur()
     updatekkt = &HeurClsp::coefheur;
 }
 
-double HeurClsp::tcost(Array<double,2> tprice, int t, int t0)
+double HeurClsp::tcost(Array<double,2> tprice, int t, int t0, int j)
 {
     double cost = 0;
     for (int i = t0; i <= t; i++)
@@ -198,7 +198,7 @@ double HeurClsp::tcost(Array<double,2> tprice, int t, int t0)
     return cost;
 }
 
-double HeurClsp::wwcost(Array<double,2> tprice, int t, int t0)
+double HeurClsp::wwcost(Array<double,2> tprice, int t, int t0, int j)
 {
     double cost = 0;
     for (int i = t0; i <= t; i++)
@@ -211,13 +211,13 @@ double HeurClsp::wwcost(Array<double,2> tprice, int t, int t0)
     return cost;
 }
 
-double HeurClsp::tprice(int t, int t0)
+double HeurClsp::tprice(int t, int t0, int j)
 {
     return ((*alpha)(j,t) + ((*prod)(j,t0) + sum((*stor)(j,Range(t0,t-1)))
         + (*cons)(j,t0)*(*coef)(t0))* (*beta)(j,t)) / (2 * (*beta)(j,t));
 }
 
-double HeurClsp::wwprice(int t, int t0)
+double HeurClsp::wwprice(int t, int t0, int j)
 {
     return (*price)(j,t);
 }
@@ -225,9 +225,9 @@ double HeurClsp::wwprice(int t, int t0)
 double HeurClsp::ww()
 {
     double criterium;
-    HeurClsp* copy = new HeurClsp((*this))
+    HeurClsp* copy = new HeurClsp((*this));
     copy -> cost = &HeurClsp::wwcost;
-    copy -> price = &HeurClsp::wwprice;
+    copy -> dpprice = &HeurClsp::wwprice;
     copy -> thomas();
     criterium = copy -> objective();
 
@@ -239,7 +239,7 @@ double HeurClsp::ww()
 ////OUTPUT
 
     free(copy);
-    return objectif;
+    return criterium;
 }
 
 void HeurClsp::thomas()
@@ -252,8 +252,8 @@ void HeurClsp::thomas()
     for(int j = 0; j < product;  j++)
     {
         //initiate price and cost
-        tprice(t,t) = (*this.*price)(t,t);
-        c(t) = -(*this.*cost)(tprice,t,t);
+        tprice(t,t) = 100;//(*this.*dpprice)(t,t,j);
+        c(t) = 2000;//-(*this.*cost)(tprice,t,t,j);
         //initiate criterium
         f(t) = 0;
         f(t+1) = -c(t);
@@ -266,9 +266,9 @@ void HeurClsp::thomas()
             for (int t0 = 0; t0 <= t; t0++)
             {
                 //compute price
-                tprice(t,t0) = (*this.*price)(t,t0);
+                tprice(t,t0) = 100;//(*this.*dpprice)(t,t0,j);
                 //compute cost
-                c(t0) = (*this.*cost)(tprice,t,t0);
+                c(t0) = 200000;//(*this.*cost)(tprice,t,t0,j);
             }
             //find minimal criterium
             f(t+1) = min(c(Range(0,t)) + f(Range(0,t)));
@@ -354,6 +354,7 @@ void HeurClsp::coefheur()
                     printf("\tIn period %d: drop the object number %d producted for the period %d\n",tps,obj,t0);
                 }
             ////OUTPUT
+
                 //update loop stoping condition
                 linkedproduct(t0) = -1;
                 t0 = first(linkedproduct == tps);
@@ -527,7 +528,7 @@ double HeurClsp::heursolver()
         }
         else
         {
-            (*this.*updatekkt)();
+            //(*this.*updatekkt)();
             lower = objective();
             //update KKT coefficients
             (*coef) = param*previouscoef + (1-param)*(*coef);

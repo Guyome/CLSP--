@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-W -Wall -ansi -pedantic -O3 -fPIC
+CFLAGS=-Wall -ansi -pedantic -O3 -fPIC
 LDFLAGS=-shared -lblitz -lboost_python -lpython2.6 -llapack -lipopt -lpthread
 SRCDIR=./
 TESTDIR=$(SRCDIR)/test

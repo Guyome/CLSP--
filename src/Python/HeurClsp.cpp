@@ -35,6 +35,10 @@ HeurClsp::HeurClsp(boost::python::list _alpha, boost::python::list _beta,
     constraint = new Array<double,1>(period);
     coef = new Array<double,1>(period);
     void (HeurClsp::*updatekkt) ();
+    void (HeurClsp::*cost) ();
+    void (HeurClsp::*price) ();
+    this -> cost = &HeurClsp::tcost;
+    this -> price = &HeurClsp::tprice;
     this -> updatekkt = &HeurClsp::coefQP;//pointor to function
 
     //import from python object
@@ -53,7 +57,7 @@ HeurClsp::HeurClsp(boost::python::list _alpha, boost::python::list _beta,
     }
 
     //initial point
-    (*coef) = 0.;//KKT initiated as null
+    (*coef) = 0;//KKT initiated as null
     (*storage) = 0;
     (*production) = 0;
     (*price) = alpha->copy();
@@ -64,6 +68,41 @@ HeurClsp::HeurClsp(boost::python::list _alpha, boost::python::list _beta,
         HeurClsp::plotParam();
     }
 ///OUTPUT
+}
+
+HeurClsp::HeurClsp(HeurClsp origin)
+{
+    period = origin.period;
+    product = origin.product;
+    verbose = origin.verbose;
+    cycle = origin.cycle;
+    eps = origin.eps;
+    param = origin.param;
+    alpha = new Array<double,2>(origin.alpha);
+    beta = new Array<double,2>(origin.beta);
+    prod = new Array<double,2>(origin.prod);
+    stor = new Array<double,2>(origin.stor);
+    cons = new Array<double,2>(origin.cons);
+    setupcost = new Array<double,2>(origin.setupcost);
+    constraint = new Array<double,1>(origin.constraint);
+    setup = new Array<double,2>(product,period);
+    price = new Array<double,2>(product,period);
+    production = new Array<double,2>(product,period);
+    storage = new Array<double,2>(product,period);
+    ind = new Array<int,2>(product,period);
+    coef = new Array<double,1>(period);
+    void (HeurClsp::*updatekkt) ();
+    void (HeurClsp::*cost) ();
+    void (HeurClsp::*price) ();
+    this -> cost = &HeurClsp::tcost;
+    this -> price = &HeurClsp::tprice;
+    this -> updatekkt = &HeurClsp::coefQP;
+
+    //initial point
+    (*coef) = 0;//KKT initiated as null
+    (*storage) = 0;
+    (*production) = 0;
+    (*price) = alpha->copy();
 }
 
 void HeurClsp::plotVariables()
@@ -146,46 +185,90 @@ void HeurClsp::setHeur()
     updatekkt = &HeurClsp::coefheur;
 }
 
+double HeurClsp::tcost(Array<double,2> tprice, int t, int t0)
+{
+    double cost = 0;
+    for (int i = t0; i <= t; i++)
+    {
+        cost += ((*prod)(j,t0) + (*cons)(j,t0)*(*coef)(t0)
+            + sum((*stor)(j,Range(t0,i-1))) - tprice(i,t0))
+            * ((*alpha)(j,t) - (*beta)(j,t) * tprice(i,t0));
+    }
+    cost += (*setup)(j,t0);
+    return cost;
+}
+
+double HeurClsp::wwcost(Array<double,2> tprice, int t, int t0)
+{
+    double cost = 0;
+    for (int i = t0; i <= t; i++)
+    {
+        cost += ((*prod)(j,t0) + (*cons)(j,t0)*(*coef)(t0)
+            + sum((*stor)(j,Range(t0,i-1))))
+            * ((*alpha)(j,t) - (*beta)(j,t) * tprice(i,t0));
+    }
+    cost += (*setup)(j,t0);
+    return cost;
+}
+
+double HeurClsp::tprice(int t, int t0)
+{
+    return ((*alpha)(j,t) + ((*prod)(j,t0) + sum((*stor)(j,Range(t0,t-1)))
+        + (*cons)(j,t0)*(*coef)(t0))* (*beta)(j,t)) / (2 * (*beta)(j,t));
+}
+
+double HeurClsp::wwprice(int t, int t0)
+{
+    return (*price)(j,t);
+}
+
+double HeurClsp::ww()
+{
+    double criterium;
+    HeurClsp* copy = new HeurClsp((*this))
+    copy -> cost = &HeurClsp::wwcost;
+    copy -> price = &HeurClsp::wwprice;
+    copy -> thomas();
+    criterium = copy -> objective();
+
+////OUPOUT
+    if (copy -> verbose >2)
+    {
+        copy -> plotVariables();
+    }
+////OUTPUT
+
+    free(copy);
+    return objectif;
+}
+
 void HeurClsp::thomas()
 {
     Array<double,1> c(period);//cost function
     Array<double,1> f(period+1);//productective function
     Array<double,2> tprice(period,period);//local price 
-    Array<double,2> tdemand(period,period);//local demand
-    double sumc;
-    int t;//current time period
+    int t=0;//current time period
 
     for(int j = 0; j < product;  j++)
     {
-        //initiate price,demand since there is no storage
-        t = 0;
-        tprice(t,t) = ((*alpha)(j,t) + ((*prod)(j,t) + (*cons)(j,t)*(*coef)(t))
-            * (*beta)(j,t)) / (2 * (*beta)(j,t) );
-        tdemand(t,t) = (*alpha)(j,t) - (*beta)(j,t) * tprice(t,t);
-        c(t) = tdemand(t,t)*( tprice(t,t) - (*prod)(j,t))-(*setup)(j,t);
+        //initiate price and cost
+        tprice(t,t) = (*this.*price)(t,t);
+        c(t) = -(*this.*cost)(tprice,t,t);
+        //initiate criterium
         f(t) = 0;
         f(t+1) = -c(t);
         //result for the first period
         (*ind)(j,t) = 0;
-        (*price)(j,t)=tprice(t,(int)(*ind)(j,t));
+        (*price)(j,t) = tprice(t,(int)(*ind)(j,t));
         (*production)(j,t) = (*alpha)(j,t)-(*beta)(j,t)*(*price)(j,t);
         for (t = 1; t < period;  t++)
         {
             for (int t0 = 0; t0 <= t; t0++)
             {
                 //compute price
-                tprice(t,t0) = ((*alpha)(j,t) + ((*prod)(j,t0) + sum((*stor)(j,Range(t0,t-1)))
-                    + (*cons)(j,t0)*(*coef)(t0))* (*beta)(j,t)) / (2 * (*beta)(j,t));
-                //compute demand
-                tdemand(t,t0) = (*alpha)(j,t) - (*beta)(j,t) * tprice(t,t0);
+                tprice(t,t0) = (*this.*price)(t,t0);
                 //compute cost
-                sumc = 0;
-                for (int i = t0; i <= t; i++)
-                {
-                    sumc += ((*prod)(j,t0) + (*cons)(j,t0)*(*coef)(t0)
-                        + sum((*stor)(j,Range(t0,i-1))) - tprice(i,t0))*tdemand(i,t0);
-                }
-                c(t0) = sumc + (*setup)(j,t0);
+                c(t0) = (*this.*cost)(tprice,t,t0);
             }
             //find minimal criterium
             f(t+1) = min(c(Range(0,t)) + f(Range(0,t)));
@@ -242,7 +325,7 @@ void HeurClsp::coefheur()
         obj = 0;
         countobj = 0; //initiate counter
         while ( (consValue(tps) > (*constraint)(tps)) & (obj >= 0) & (countobj < product))
-        {        
+        {
             //selecte the product with the bigest consumption
             obj = max(maxIndex(sortlist));
             //compute the number of time period who are produce in tps

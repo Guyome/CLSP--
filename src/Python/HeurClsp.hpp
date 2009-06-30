@@ -34,11 +34,20 @@ private:
     Array<double,1>* coef;//Khun Thucker coeficient
 
     void (HeurClsp::*updatekkt) ();
+    void (HeurClsp::*cost) ();
+    void (HeurClsp::*price) ();
+
     void coefheur();//heuristic who update KKT coef
     void coefQP();//QP solver who update KKT coef
     void subproblem();//heurcoef for discret price
 
+    double tcost(Array<double,2> tprice, int t, int t0);
+    double wwcost(Array<double,2> tprice, int t, int t0);
+    double tprice(int t, int t0);
+    double wwprice(int t, int t0);
+
     list ArrayToList(Array<double,2> array);//function to convert blitz array to python list
+
 public:
     //default constructor
     HeurClsp(list alpha, list beta, list prod, list stor,
@@ -49,15 +58,15 @@ public:
     double objective();//compute objective
     bool feasible();//return true if the current state are feasible
     void setHeur();//use heurcoef in heursolver
+    double ww();//wagner and within algorithm
 
-    
     //methods to get variables;
     list getPrice();
     list getProd();
     list getHold();
     list getSetup();
     list getCoef();
-    
+
     void plotParam();//plot all parameters
     void plotVariables();//plot all varaibles
 };

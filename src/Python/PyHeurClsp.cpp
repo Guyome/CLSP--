@@ -15,5 +15,6 @@ BOOST_PYTHON_MODULE(heurclsp)
         .def("heursolver", &HeurClsp::heursolver)
         .def("objective", &HeurClsp::objective)
         .def("useheur", &HeurClsp::setHeur)
+        .def("wagnerwithin", &HeurClsp::ww)
     ;
 }

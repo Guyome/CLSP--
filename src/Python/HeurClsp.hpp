@@ -40,7 +40,7 @@ private:
     void coefheur();//heuristic who update KKT coef
     void coefQP();//QP solver who update KKT coef
     void subproblem();//heurcoef for discret price
-
+    void initVariables();//initiate all variables
     double tcost(Array<double,2> tprice, int t, int t0, int j);
     double wwcost(Array<double,2> tprice, int t, int t0, int j);
     double tprice(int t, int t0, int j);

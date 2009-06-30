@@ -57,10 +57,7 @@ HeurClsp::HeurClsp(boost::python::list _alpha, boost::python::list _beta,
     }
 
     //initial point
-    (*coef) = 0;//KKT initiated as null
-    (*storage) = 0;
-    (*production) = 0;
-    (*price) = alpha->copy();
+    initVariables();
 
 ////OUTPUT
     if (verbose >2)
@@ -99,10 +96,7 @@ HeurClsp::HeurClsp(const HeurClsp& origin)
     this -> updatekkt = &HeurClsp::coefQP;
 
     //initial point
-    (*coef) = 0;//KKT initiated as null
-    (*storage) = 0;
-    (*production) = 0;
-    (*price) = alpha->copy();
+    initVariables();
 }
 
 void HeurClsp::plotVariables()
@@ -180,14 +174,23 @@ boost::python::list HeurClsp::getCoef()
     return col;
 }
 
+void HeurClsp::initVariables()
+{
+    (*coef) = 0;//KKT initiated as null
+    (*storage) = 0;
+    (*production) = 0;
+    (*price) = alpha->copy();
+}
+
 void HeurClsp::setHeur()
 {
 ////OUPOUT
     if (verbose >2)
     {
-        printf("Use IpOpt solver\n");
+        printf("\nUse IpOpt solver\n");
     }
 ////OUTPUT
+
     updatekkt = &HeurClsp::coefheur;
 }
 
@@ -230,14 +233,13 @@ double HeurClsp::wwprice(int t, int t0, int j)
 
 double HeurClsp::ww()
 {
-    double criterium;
-    HeurClsp* copy = new HeurClsp((*this));
-    copy -> cost = &HeurClsp::wwcost;
-    copy -> dpprice = &HeurClsp::wwprice;
-    copy -> thomas();
-    criterium = copy -> objective();
-    delete(copy);
-    return criterium;
+    
+    //specify function to use thomas()
+    // in wagner and within conditions
+    cost = &HeurClsp::wwcost;
+    dpprice = &HeurClsp::wwprice;
+    thomas();
+    return objective();
 }
 
 void HeurClsp::thomas()
@@ -498,6 +500,8 @@ double HeurClsp::heursolver()
     firstIndex t;
     diff = eps + 1.;
 
+    //initial point
+    initVariables();
     while ( (diff > eps) & (count < cycle) )
     {
 
@@ -527,7 +531,7 @@ double HeurClsp::heursolver()
         }
         else
         {
-            //(*this.*updatekkt)();
+            (*this.*updatekkt)();
             lower = objective();
             //update KKT coefficients
             (*coef) = param*previouscoef + (1-param)*(*coef);

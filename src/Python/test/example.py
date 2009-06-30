@@ -34,8 +34,8 @@ consumption, constraint = tl.importdata(address)
 test = sl.heurclsp(slope, intercept, prodcost,
     holdcost, consumption, setupcost, constraint, time_hor, nb_obj, verbose, cycle, eps, param)
 #test.useheur()
-test.heursolver()
-
+#test.heursolver()
+test.thomas()
 print "Price:","\n\t".join([str(test.price[j]) for j in range(nb_obj)])
 print "Production:","\n\t".join([str(test.prod[j]) for j in range(nb_obj)])
 print "Holding:","\n\t".join([str(test.hold[j]) for j in range(nb_obj)])

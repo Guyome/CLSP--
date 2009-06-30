@@ -182,6 +182,12 @@ boost::python::list HeurClsp::getCoef()
 
 void HeurClsp::setHeur()
 {
+////OUPOUT
+    if (verbose >2)
+    {
+        printf("Use IpOpt solver\n");
+    }
+////OUTPUT
     updatekkt = &HeurClsp::coefheur;
 }
 
@@ -230,15 +236,7 @@ double HeurClsp::ww()
     copy -> dpprice = &HeurClsp::wwprice;
     copy -> thomas();
     criterium = copy -> objective();
-
-////OUPOUT
-    if (copy -> verbose >2)
-    {
-        copy -> plotVariables();
-    }
-////OUTPUT
-
-    free(copy);
+    delete(copy);
     return criterium;
 }
 
@@ -247,13 +245,14 @@ void HeurClsp::thomas()
     Array<double,1> c(period);//cost function
     Array<double,1> f(period+1);//productective function
     Array<double,2> tprice(period,period);//local price 
-    int t=0;//current time period
+    int t;//current time period
 
     for(int j = 0; j < product;  j++)
     {
+        t = 0;
         //initiate price and cost
-        tprice(t,t) = 100;//(*this.*dpprice)(t,t,j);
-        c(t) = 2000;//-(*this.*cost)(tprice,t,t,j);
+        tprice(t,t) = (*this.*dpprice)(t,t,j);
+        c(t) = (*this.*cost)(tprice,t,t,j);
         //initiate criterium
         f(t) = 0;
         f(t+1) = -c(t);
@@ -266,15 +265,15 @@ void HeurClsp::thomas()
             for (int t0 = 0; t0 <= t; t0++)
             {
                 //compute price
-                tprice(t,t0) = 100;//(*this.*dpprice)(t,t0,j);
+                tprice(t,t0) = (*this.*dpprice)(t,t0,j);
                 //compute cost
-                c(t0) = 200000;//(*this.*cost)(tprice,t,t0,j);
+                c(t0) = (*this.*cost)(tprice,t,t0,j);
             }
             //find minimal criterium
             f(t+1) = min(c(Range(0,t)) + f(Range(0,t)));
             //update all variable for period t
             (*ind)(j,t) = min(minIndex(c(Range(0,t))+ f(Range(0,t))));
-            (*price)(j,t) = tprice(t,(int)(*ind)(j,t));
+            (*price)(j,t) = 100;//tprice(t,(int)(*ind)(j,t));
             (*production)(j,t) = 0.; //initiate production
             (*production)(j,(*ind)(j,t)) += (*alpha)(j,t)-(*beta)(j,t)*(*price)(j,t);
             if ( t > (*ind)(j,t) )
@@ -395,7 +394,7 @@ void HeurClsp::coefheur()
 }
 
 void HeurClsp::coefQP()
-{
+{    
     //create an instance of QPSolver
     QPSolver* problem = new QPSolver((*alpha),(*beta),(*prod),(*stor),
         (*cons),(*setup),(*constraint),period,product);

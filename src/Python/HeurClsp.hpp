@@ -71,13 +71,21 @@ public:
     bool feasible();//return true if the current state are feasible
     void setHeur();//use heurcoef in heursolver
 
-
     //methods to get variables;
     list getPrice();
     list getProd();
     list getHold();
     list getSetup();
     list getCoef();
+    //methods to get and set parameters
+    double getSmooth();
+    double getStopDiff();
+    double getNbCycle();
+    int getVerbosity();
+    void setSmooth(double param);
+    void setStopDiff(double eps);
+    void setNbCycle(double cycle);
+    void setVerbosity(int verbose);
     //methods to get state
     bool isDiscret();//use discret price
     bool isWW();//use Wagner and within algo 

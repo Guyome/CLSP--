@@ -177,6 +177,46 @@ boost::python::list HeurClsp::getCoef()
     return col;
 }
 
+double HeurClsp::getSmooth()
+{
+    return param;
+}
+
+double HeurClsp::getStopDiff()
+{
+    return eps;
+}
+
+double HeurClsp::getNbCycle()
+{
+    return cycle;
+}
+
+int HeurClsp::getVerbosity()
+{
+    return verbose;
+}
+
+void HeurClsp::setSmooth(double _param)
+{
+    param = _param;
+}
+
+void HeurClsp::setStopDiff(double _eps)
+{
+    eps = _eps;
+}
+
+void HeurClsp::setNbCycle(double _cycle)
+{
+    cycle = _cycle;
+}
+
+void HeurClsp::setVerbosity(int _verbose)
+{
+    verbose = _verbose;
+}
+
 bool HeurClsp::isWW()
 {
     if(cost == &HeurClsp::wwcost)

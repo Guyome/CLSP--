@@ -10,6 +10,10 @@ void (HeurClsp::*thomasx3)(list) = &HeurClsp::thomas;
 BOOST_PYTHON_MODULE(heurclsp)
 {
     class_<HeurClsp>("heurclsp",init<list, list, list, list, list, list, list, int, int, int, int, float, float>())
+        .add_property("verbose",&HeurClsp::getVerbosity,&HeurClsp::setVerbosity)
+        .add_property("nbcycle",&HeurClsp::getNbCycle,&HeurClsp::setNbCycle)
+        .add_property("mindiff",&HeurClsp::getStopDiff,&HeurClsp::setStopDiff)
+        .add_property("smoothparam",&HeurClsp::getSmooth,&HeurClsp::setSmooth)
         .def_readonly("price",&HeurClsp::getPrice)
         .def_readonly("hold",&HeurClsp::getHold)
         .def_readonly("prod",&HeurClsp::getProd)

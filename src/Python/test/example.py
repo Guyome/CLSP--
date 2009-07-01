@@ -13,7 +13,7 @@ nb_obj = 2
 cycle = 100
 eps = 1.
 param = 0.8
-verbose = 3
+verbose = 1
 address = 'test.csv'
 
 #uncomment following comment to
@@ -36,7 +36,7 @@ test = sl.heurclsp(slope, intercept, prodcost,
 #test.useheur()
 #test.heursolver()
 test.thomas()
-print test.isDiscret(),test.isWW()
+
 
 print "Price:","\n\t".join([str(test.price[j]) for j in range(nb_obj)])
 print "Production:","\n\t".join([str(test.prod[j]) for j in range(nb_obj)])

@@ -33,7 +33,8 @@ private:
     Array<double,2>* storage;//holding
     Array<int,2>* ind;//index structure from thomas algorithm
     Array<double,1>* coef;//Khun Thucker coeficient
-
+    //gap variable as list
+    list gap;
     //this pointors allow to change 
     // algorithm behavior
     void (HeurClsp::*updatekkt) ();
@@ -77,6 +78,7 @@ public:
     list getHold();
     list getSetup();
     list getCoef();
+    list getGAP();
     //methods to get and set parameters
     double getSmooth();
     double getStopDiff();

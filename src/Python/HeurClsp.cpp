@@ -167,6 +167,11 @@ boost::python::list HeurClsp::getSetup()
     return ArrayToList((*setup));
 }
 
+boost::python::list HeurClsp::getGAP()
+{
+    return gap;
+}
+
 boost::python::list HeurClsp::getCoef()
 {
     boost::python::list col;
@@ -628,6 +633,7 @@ double HeurClsp::heursolver()
             //update stoping conditions 
         }
         diff = upper - lower;
+        gap.append((upper - lower)/upper);
         count ++;
     }
 ////OUPOUT

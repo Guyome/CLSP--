@@ -231,13 +231,16 @@ double HeurClsp::wwprice(int t, int t0, int j)
     return (*price)(j,t);
 }
 
-double HeurClsp::ww()
+double HeurClsp::ww(double fixedprice)
 {
-    
+    //initiate vriableble and price
+    initVariables();
+    (*price) = fixedprice;
     //specify function to use thomas()
     // in wagner and within conditions
     cost = &HeurClsp::wwcost;
     dpprice = &HeurClsp::wwprice;
+    
     thomas();
     return objective();
 }

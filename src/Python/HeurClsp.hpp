@@ -60,7 +60,7 @@ public:
     double objective();//compute objective
     bool feasible();//return true if the current state are feasible
     void setHeur();//use heurcoef in heursolver
-    double ww();//wagner and within algorithm
+    double ww(double price);//wagner and within algorithm
 
     //methods to get variables;
     list getPrice();

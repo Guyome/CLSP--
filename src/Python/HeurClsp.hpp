@@ -25,6 +25,7 @@ private:
     Array<double,2>* cons;//consumption of ressouce 
     Array<double,2>* setupcost;//setup cost
     Array<double,1>* constraint;//prodcution constraint
+    Array<double,1>* discretprices;//vector of allowed prices
     //variable
     Array<double,2>* setup;//setup structure
     Array<double,2>* price;//price
@@ -33,6 +34,8 @@ private:
     Array<int,2>* ind;//index structure from thomas algorithm
     Array<double,1>* coef;//Khun Thucker coeficient
 
+    //this pointors allow to change 
+    // algorithm behavior
     void (HeurClsp::*updatekkt) ();
     double (HeurClsp::*cost) (blitz::Array<double, 2>, int, int, int);
     double (HeurClsp::*dpprice) (int, int, int);
@@ -41,13 +44,18 @@ private:
     void coefQP();//QP solver who update KKT coef
     void subproblem();//heurcoef for discret price
     void initVariables();//initiate all variables
+
+    //different specification of price and cost computation for
+    //thomas algorithm
     double tcost(Array<double,2> tprice, int t, int t0, int j);
     double wwcost(Array<double,2> tprice, int t, int t0, int j);
     double tprice(int t, int t0, int j);
     double wwprice(int t, int t0, int j);
+    double dprice(int t, int t0, int j);
 
+    //function to interface python and C++ objects
     list ArrayToList(Array<double,2> array);//function to convert blitz array to python list
-
+    void ListToDiscretprices(list prices);//function to import discret prices
 public:
     //default constructor
     HeurClsp(list alpha, list beta, list prod, list stor,
@@ -57,10 +65,12 @@ public:
     HeurClsp(const HeurClsp& origin);
     double heursolver();//PCLSP solver
     void thomas();//CLSP solver based on Thomas's paper
+    void thomas(list prices);//thomas algorithm with discret prices
+    void thomas(double price);//wagner and within algorithm
     double objective();//compute objective
     bool feasible();//return true if the current state are feasible
     void setHeur();//use heurcoef in heursolver
-    double ww(double price);//wagner and within algorithm
+
 
     //methods to get variables;
     list getPrice();
@@ -68,6 +78,9 @@ public:
     list getHold();
     list getSetup();
     list getCoef();
+    //methods to get state
+    bool isDiscret();//use discret price
+    bool isWW();//use Wagner and within algo 
 
     void plotParam();//plot all parameters
     void plotVariables();//plot all varaibles

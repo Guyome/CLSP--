@@ -34,12 +34,9 @@ HeurClsp::HeurClsp(boost::python::list _alpha, boost::python::list _beta,
     ind = new Array<int,2>(product,period);
     constraint = new Array<double,1>(period);
     coef = new Array<double,1>(period);
-    void (HeurClsp::*updatekkt) ();
-    double (HeurClsp::*cost) (Array<double, 2>, int, int, int);
-    double (HeurClsp::*dpprice) (int, int, int);
-    this -> cost = &HeurClsp::tcost;
-    this -> dpprice = &HeurClsp::tprice;
-    this -> updatekkt = &HeurClsp::coefQP;//pointor to function
+    cost = &HeurClsp::tcost;
+    dpprice = &HeurClsp::tprice;
+    updatekkt = &HeurClsp::coefQP;//pointor to function
 
     //import from python object
     for (int j = 0; j < product; j ++)
@@ -88,12 +85,9 @@ HeurClsp::HeurClsp(const HeurClsp& origin)
     storage = new Array<double,2>(product,period);
     ind = new Array<int,2>(product,period);
     coef = new Array<double,1>(period);
-    void (HeurClsp::*updatekkt) ();
-    double (HeurClsp::*cost) (Array<double, 2>, int, int, int);
-    double (HeurClsp::*dpprice) (int, int, int);
-    this -> cost = &HeurClsp::tcost;
-    this -> dpprice = &HeurClsp::tprice;
-    this -> updatekkt = &HeurClsp::coefQP;
+    cost = &HeurClsp::tcost;
+    dpprice = &HeurClsp::tprice;
+    updatekkt = &HeurClsp::coefQP;
 
     //initial point
     initVariables();
@@ -144,6 +138,15 @@ boost::python::list HeurClsp::ArrayToList(Array<double,2> array)
     return row;
 }
 
+void HeurClsp::ListToDiscretprices(boost::python::list prices)
+{
+    discretprices = new Array<double,1>(boost::python::len(prices));
+    for(int i = 0; i < discretprices -> size(); i ++)
+    {
+        (*discretprices)(i) = ( extract<double>(prices[i]) );
+    }
+}
+
 boost::python::list HeurClsp::getPrice()
 {
     return ArrayToList((*price));
@@ -172,6 +175,30 @@ boost::python::list HeurClsp::getCoef()
             col.append( (*coef)(t) );
     }
     return col;
+}
+
+bool HeurClsp::isWW()
+{
+    if(cost == &HeurClsp::wwcost)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool HeurClsp::isDiscret()
+{
+    if(dpprice == &HeurClsp::dprice)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 void HeurClsp::initVariables()
@@ -226,14 +253,21 @@ double HeurClsp::tprice(int t, int t0, int j)
         + (*cons)(j,t0)*(*coef)(t0))* (*beta)(j,t)) / (2 * (*beta)(j,t));
 }
 
+double HeurClsp::dprice(int t, int t0, int j)
+{
+    Array<double, 1> opti(discretprices -> size());
+    opti = tprice(t, t0, j);
+    return (*discretprices)(minIndex(abs(opti-(*discretprices))));
+}
+
 double HeurClsp::wwprice(int t, int t0, int j)
 {
     return (*price)(j,t);
 }
 
-double HeurClsp::ww(double fixedprice)
+void HeurClsp::thomas(double fixedprice)
 {
-    //initiate vriableble and price
+    //initiate variables and price
     initVariables();
     (*price) = fixedprice;
     //specify function to use thomas()
@@ -242,7 +276,20 @@ double HeurClsp::ww(double fixedprice)
     dpprice = &HeurClsp::wwprice;
     
     thomas();
-    return objective();
+}
+
+void HeurClsp::thomas(boost::python::list prices)
+{
+    //initiate variablse and price
+    initVariables();
+    ListToDiscretprices(prices);
+    (*price) = max((*discretprices));
+    //specify function to use thomas()
+    // in discret prices conditions
+    cost = &HeurClsp::tcost;
+    dpprice = &HeurClsp::dprice;
+    
+    thomas();
 }
 
 void HeurClsp::thomas()

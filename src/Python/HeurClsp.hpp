@@ -48,11 +48,11 @@ private:
 
     //different specification of price and cost computation for
     //thomas algorithm
-    double tcost(Array<double,2> tprice, int t, int t0, int j);
-    double wwcost(Array<double,2> tprice, int t, int t0, int j);
-    double tprice(int t, int t0, int j);
-    double wwprice(int t, int t0, int j);
-    double dprice(int t, int t0, int j);
+    inline double tcost(Array<double,2> tprice, int t, int t0, int j);
+    inline double wwcost(Array<double,2> tprice, int t, int t0, int j);
+    inline double tprice(int t, int t0, int j);
+    inline double wwprice(int t, int t0, int j);
+    inline double dprice(int t, int t0, int j);
 
     //function to interface python and C++ objects
     list ArrayToList(Array<double,2> array);//function to convert blitz array to python list
@@ -90,7 +90,7 @@ public:
     void setVerbosity(int verbose);
     //methods to get state
     bool isDiscret();//use discret price
-    bool isWW();//use Wagner and within algo 
+    bool isWW();//use Wagner and within algo
 
     void plotParam();//plot all parameters
     void plotVariables();//plot all varaibles

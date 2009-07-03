@@ -4,8 +4,8 @@
 #include <algorithm>
 #include "HeurClsp.hpp"
 #include "QPSolver.hpp"
-#include "IpIpoptApplication.hpp"
-#include "IpSolveStatistics.hpp"
+#include <coin/IpIpoptApplication.hpp>
+#include <coin/IpSolveStatistics.hpp>
 
 using namespace blitz;
 using namespace Ipopt;
@@ -266,7 +266,7 @@ void HeurClsp::setHeur()
     updatekkt = &HeurClsp::coefheur;
 }
 
-double HeurClsp::tcost(Array<double,2> tprice, int t, int t0, int j)
+inline double HeurClsp::tcost(Array<double,2> tprice, int t, int t0, int j)
 {
     double cost = 0;
     for (int i = t0; i <= t; i++)
@@ -279,7 +279,7 @@ double HeurClsp::tcost(Array<double,2> tprice, int t, int t0, int j)
     return cost;
 }
 
-double HeurClsp::wwcost(Array<double,2> tprice, int t, int t0, int j)
+inline double HeurClsp::wwcost(Array<double,2> tprice, int t, int t0, int j)
 {
     double cost = 0;
     for (int i = t0; i <= t; i++)
@@ -292,20 +292,20 @@ double HeurClsp::wwcost(Array<double,2> tprice, int t, int t0, int j)
     return cost;
 }
 
-double HeurClsp::tprice(int t, int t0, int j)
+inline double HeurClsp::tprice(int t, int t0, int j)
 {
     return ((*alpha)(j,t) + ((*prod)(j,t0) + sum((*stor)(j,Range(t0,t-1)))
         + (*cons)(j,t0)*(*coef)(t0))* (*beta)(j,t)) / (2 * (*beta)(j,t));
 }
 
-double HeurClsp::dprice(int t, int t0, int j)
+inline double HeurClsp::dprice(int t, int t0, int j)
 {
     Array<double, 1> opti(discretprices -> size());
     opti = tprice(t, t0, j);
     return (*discretprices)(minIndex(abs(opti-(*discretprices))));
 }
 
-double HeurClsp::wwprice(int t, int t0, int j)
+inline double HeurClsp::wwprice(int t, int t0, int j)
 {
     return (*price)(j,t);
 }

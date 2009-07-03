@@ -4,7 +4,7 @@
 #ifndef __QPSolver_HPP__
 #define __QPSolver_HPP__
 
-#include "IpTNLP.hpp"
+#include <coin/IpTNLP.hpp>
 #include <blitz/array.h>
 
 using namespace Ipopt;

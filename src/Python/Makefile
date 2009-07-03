@@ -1,11 +1,10 @@
 CC=gcc
-CFLAGS=-Wall -ansi -pedantic -O3 -fPIC
+CFLAGS=-Wall -W -O3 -fPIC -pipe
 LDFLAGS=-shared -lblitz -lboost_python -lpython2.6 -llapack -lipopt -lpthread
 SRCDIR=./
 TESTDIR=$(SRCDIR)/test
 LIB=heurclsp.so
-PYTHONDIR=/usr/include/python2.6
-COINDIR=/usr/include/coin
+INCLUDE=/usr/include/python2.6
 SRC= $(wildcard $(SRCDIR)/*.cpp)
 OBJ= $(SRC:.cpp=.o)
 
@@ -16,7 +15,7 @@ $(LIB): $(OBJ)
 	cp $(SRCDIR)/$(LIB) $(TESTDIR)
 
 %.o: %.cpp
-	$(CC) -o $@ -c $< $(CFLAGS) -I $(PYTHONDIR) -I $(COINDIR)
+	$(CC) -o $@ -c $< $(CFLAGS) -I $(INCLUDE)
 
 clean:
 	rm -rf $(SRCDIR)/*.o *.so

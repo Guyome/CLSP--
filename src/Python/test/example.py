@@ -13,7 +13,7 @@ nb_obj = 2
 cycle = 100
 eps = 1.
 param = 0.8
-verbose = 1
+verbose = 3
 address = 'test.csv'
 
 #uncomment following comment to

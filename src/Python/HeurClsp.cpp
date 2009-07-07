@@ -491,10 +491,10 @@ void HeurClsp::coefheur()
 }
 
 void HeurClsp::coefQP()
-{    
+{
     //create an instance of QPSolver
-    QPSolver* problem = new QPSolver((*alpha),(*beta),(*prod),(*stor),
-        (*cons),(*setup),(*constraint),period,product);
+    QPSolver* problem = new QPSolver(alpha,beta,prod,stor,
+        cons,setup,constraint,period,product);
     SmartPtr<TNLP> mynlp = problem;
     //create an instance of the IpoptApplication
     SmartPtr<IpoptApplication> app = new IpoptApplication();
@@ -502,20 +502,20 @@ void HeurClsp::coefQP()
     ApplicationReturnStatus status;
     //set verbosity and derivative test
     app->Options()->SetIntegerValue("print_level", verbose);
-    app->Options()->SetStringValue("derivative_test","second-order");
     //run QPSolver
     status = app->Initialize();
-    if (status != Solve_Succeeded) 
+
+    if (status == Solve_Succeeded) 
     {
         //solve
         status = app->OptimizeTNLP(mynlp);
         if ( status == Solve_Succeeded ) 
         {
             //get back variables
-            (*price) = problem -> getPrice();
-            (*production) = problem -> getProd();
-            (*storage) = problem -> getStor();
-            (*coef) = problem -> getCoef();
+            (*price) = problem -> getPrice().copy();
+            (*production) = problem -> getProd().copy();
+            (*storage) = problem -> getStor().copy();
+            (*coef) = problem -> getCoef().copy();
         }
     }
 
@@ -592,12 +592,13 @@ double HeurClsp::heursolver()
     Array<double,1> previouscoef(period);
     double diff, upper, lower;
     int count = 0;
+    bool unfeasible = true;
     firstIndex t;
     diff = eps + 1.;
 
     //initial point
     initVariables();
-    while ( (diff > eps) & (count < cycle) )
+    while ( (diff > eps) & (count < cycle) & unfeasible)
     {
 
     ////OUPOUT
@@ -622,7 +623,7 @@ double HeurClsp::heursolver()
         if (HeurClsp::feasible())
         {
             lower = upper;
-            count = cycle;
+            unfeasible = false;
         }
         else
         {

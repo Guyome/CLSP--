@@ -14,8 +14,8 @@ class QPSolver : public TNLP
 {
     public:
     /** default constructor */
-    QPSolver(Array<double,2> alpha, Array<double,2> beta, Array<double,2> prod, Array<double,2> stor,
-                    Array<double,2> consumption, Array<double,2> setup, Array<double,1> constraint,
+    QPSolver(Array<double,2>* alpha, Array<double,2>* beta, Array<double,2>* prod, Array<double,2>* stor,
+                    Array<double,2>* consumption, Array<double,2>* setup, Array<double,1>* constraint,
                     int period, int product);
 
     /** default destructor */
@@ -73,12 +73,13 @@ class QPSolver : public TNLP
                                 Index m, const Number* g, const Number* lambda,
                                 Number obj_value,const IpoptData* ip_data,
                                 IpoptCalculatedQuantities* ip_cq);
-    //methods to get back variables
-    virtual Array<double,1> getCoef();
-    virtual Array<double,2> getPrice();
-    virtual Array<double,2> getProd();
-    virtual Array<double,2> getStor();
     //@}
+    
+    //methods to get back variables
+    Array<double,1> getCoef();
+    Array<double,2> getPrice();
+    Array<double,2> getProd();
+    Array<double,2> getStor();
 
     private:
     /**@name Methods to block default compiler methods.
@@ -109,6 +110,10 @@ class QPSolver : public TNLP
     Array<double,2>* varprice;//optimal price
     Array<double,2>* varprod;//optimal production
     Array<double,2>* varstor;//optimal storage
+    
+    inline double Prod(int j, int t, const Number* x);
+    inline double Price(int j, int t, const Number* x);
+    inline double Stor(int j, int t, const Number* x);
 };
 
 

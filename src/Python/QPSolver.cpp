@@ -267,7 +267,6 @@ void QPSolver::finalize_solution(SolverReturn status,
     {
         (*varcoef)(t) = lambda[t+period*product];
     }
-    printf("J\tT\tProd\tPri.\tStor\n");
     for (int j = 0; j < product; j ++)
     {
         for (int t = 0; t < period; t += 1)

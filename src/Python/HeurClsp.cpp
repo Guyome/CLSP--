@@ -344,6 +344,10 @@ void HeurClsp::thomas()
     Array<double,2> tprice(period,period);//local price 
     int t;//current time period
 
+    //set variables
+    (*storage) = 0;
+    (*production) = 0;
+    (*price) = alpha->copy();
     for(int j = 0; j < product;  j++)
     {
         t = 0;
@@ -370,7 +374,7 @@ void HeurClsp::thomas()
             f(t+1) = min(c(Range(0,t)) + f(Range(0,t)));
             //update all variable for period t
             (*ind)(j,t) = min(minIndex(c(Range(0,t))+ f(Range(0,t))));
-            (*price)(j,t) = 100;//tprice(t,(int)(*ind)(j,t));
+            (*price)(j,t) = tprice(t,(int)(*ind)(j,t));
             (*production)(j,t) = 0.; //initiate production
             (*production)(j,(*ind)(j,t)) += (*alpha)(j,t)-(*beta)(j,t)*(*price)(j,t);
             if ( t > (*ind)(j,t) )
@@ -604,7 +608,7 @@ double HeurClsp::heursolver()
     ////OUPOUT
         if (verbose >2)
         {
-            printf("\nITER\t diff\n");
+            printf("\nITER\tdiff\n");
             printf("--------------------\n");
             printf("%d\t\t%f\n",count,diff);
         }
@@ -627,6 +631,7 @@ double HeurClsp::heursolver()
         }
         else
         {
+            //run methods to up
             (*this.*updatekkt)();
             lower = objective();
             //update KKT coefficients
@@ -634,7 +639,7 @@ double HeurClsp::heursolver()
             //update stoping conditions 
         }
         diff = upper - lower;
-        gap.append((upper - lower)/upper);
+        gap.append(diff/upper);
         count ++;
     }
 ////OUPOUT

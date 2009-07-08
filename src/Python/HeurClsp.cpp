@@ -599,6 +599,7 @@ double HeurClsp::heursolver()
     bool unfeasible = true;
     firstIndex t;
     diff = eps + 1.;
+    upper = 1;
 
     //initial point
     initVariables();
@@ -608,9 +609,9 @@ double HeurClsp::heursolver()
     ////OUPOUT
         if (verbose >2)
         {
-            printf("\nITER\tdiff\n");
+            printf("\nITER\tGAP(%)\n");
             printf("--------------------\n");
-            printf("%d\t\t%f\n",count,diff);
+            printf("%d\t%f\n",count,diff/upper*100);
         }
     ////OUPOUT
 

@@ -1,7 +1,5 @@
-#include <stdio.h>
 #include <boost/python.hpp>
 #include <blitz/array.h>
-#include <algorithm>
 #include "HeurClsp.hpp"
 #include "QPSolver.hpp"
 #include <coin/IpIpoptApplication.hpp>
@@ -109,13 +107,13 @@ void HeurClsp::plotVariables()
 
 void HeurClsp::plotParam()
 {
-    printf("\nJ\tT\tSlope\t\tInter.\t\tProd. C.\tHold. C.\tSetup C.\tCons. per P.\tConst.\n");
+    printf("\nJ\tT\tInter.\t\tSlope\t\tProd. C.\tHold. C.\tSetup C.\tCons. per P.\tConst.\n");
     printf("----------------------------------------------------------------------------------------------\n");
     for (int j = 0; j < product; j ++)
     {
         for (int t = 0; t < period; t ++)
         {
-            printf("%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t\t%f\n",j,t,(*alpha)(j,t),(*beta)(j,t),(*prod)(j,t),(*stor)(j,t),(*setupcost)(j,t),(*cons)(j,t),(*constraint)(t));
+            printf("%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",j,t,(*alpha)(j,t),(*beta)(j,t),(*prod)(j,t),(*stor)(j,t),(*setupcost)(j,t),(*cons)(j,t),(*constraint)(t));
         }
         printf("----------------------------------------------------------------------------------------------\n");
     }
@@ -393,7 +391,7 @@ void HeurClsp::thomas()
 ////OUTPUT
 }
 
-void HeurClsp::coefheur()
+double HeurClsp::coefheur()
 {
     Array<double,1> consValue(period);
     Array<double,1> sortlist(product);
@@ -492,10 +490,12 @@ void HeurClsp::coefheur()
     }
 ////OUTPUT
 
+    return objective();
 }
 
-void HeurClsp::coefQP()
+double HeurClsp::coefQP()
 {
+    Array<double ,1> sumSetup(product);
     //create an instance of QPSolver
     QPSolver* problem = new QPSolver(alpha,beta,prod,stor,
         cons,setup,constraint,period,product);
@@ -529,6 +529,12 @@ void HeurClsp::coefQP()
         HeurClsp::plotVariables();
     }
 ////OUTPUT
+
+    for (int j = 0; j < product; j ++)
+    {
+        sumSetup(j) = sum((*setup)(j,Range::all()) * (*setupcost)(j,Range::all()));
+    }
+    return -app->Statistics()->FinalObjective() - sum(sumSetup);
 }
 
 void HeurClsp::subproblem()
@@ -571,7 +577,7 @@ double HeurClsp::objective()
     for (int j = 0; j < product; j ++)
     {
         profit(j) = sum(
-            ((*alpha)(j,Range::all())- (*beta)(j,Range::all())*(*price)(j,Range::all()))
+            ((*alpha)(j,Range::all()) - (*beta)(j,Range::all())*(*price)(j,Range::all()))
             * (*price)(j,Range::all())
             - (*prod)(j,Range::all())*(*production)(j,Range::all())
             - (*stor)(j,Range::all())*(*storage)(j,Range::all())
@@ -599,6 +605,7 @@ double HeurClsp::heursolver()
     bool unfeasible = true;
     firstIndex t;
     diff = eps + 1.;
+    lower = 0;
     upper = 1;
 
     //initial point
@@ -609,9 +616,9 @@ double HeurClsp::heursolver()
     ////OUPOUT
         if (verbose >2)
         {
-            printf("\nITER\tGAP(%)\n");
-            printf("--------------------\n");
-            printf("%d\t%f\n",count,diff/upper*100);
+            printf("\nITER\tUpB.\t\tLoB.\t\tGAP(%%)\n");
+            printf("-----------------------------------------\n");
+            printf("%d\t%f\t%f\t%f\n",count,upper,lower,diff/upper*100);
         }
     ////OUPOUT
 
@@ -633,8 +640,7 @@ double HeurClsp::heursolver()
         else
         {
             //run methods to up
-            (*this.*updatekkt)();
-            lower = objective();
+            lower = (*this.*updatekkt)();
             //update KKT coefficients
             (*coef) = param*previouscoef + (1-param)*(*coef);
             //update stoping conditions 

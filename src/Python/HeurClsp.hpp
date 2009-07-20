@@ -36,13 +36,13 @@ private:
     //gap variable as list
     list gap;
     //this pointors allow to change 
-    // algorithm behavior
-    void (HeurClsp::*updatekkt) ();
+    //algorithm behavior
+    double (HeurClsp::*updatekkt) ();
     double (HeurClsp::*cost) (blitz::Array<double, 2>, int, int, int);
     double (HeurClsp::*dpprice) (int, int, int);
 
-    void coefheur();//heuristic who update KKT coef
-    void coefQP();//QP solver who update KKT coef
+    double coefheur();//heuristic who update KKT coef
+    double coefQP();//QP solver who update KKT coef
     void subproblem();//heurcoef for discret price
     void initVariables();//initiate all variables
 

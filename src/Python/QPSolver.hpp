@@ -110,10 +110,6 @@ class QPSolver : public TNLP
     Array<double,2>* varprice;//optimal price
     Array<double,2>* varprod;//optimal production
     Array<double,2>* varstor;//optimal storage
-    
-    inline double Prod(int j, int t, const Number* x);
-    inline double Price(int j, int t, const Number* x);
-    inline double Stor(int j, int t, const Number* x);
 };
 
 

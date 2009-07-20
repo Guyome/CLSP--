@@ -93,10 +93,10 @@ bool QPSolver::get_starting_point(Index n, bool init_x, Number* x,
         for (Index t = 0; t < period; t ++)
         {
             //initialize to the given starting point
-            x[t+j*period] = (*constraint)(t)/
-                (max((*consumption)(Range::all(),t))*product);//production minimize the constraint
+            x[t+j*period] = ((*constraint)(t)/
+                (max((*consumption)(Range::all(),t))*product))*(*setup)(j,t);//production minimize the constraint
             //price to stay in feasible region
-            x[t+j*period+period*product]=max(((*alpha)(j,t)-x[t+j*period])/(*beta)(j,t),(double)0);
+            x[t+j*period+period*product]=((*alpha)(j,t)-x[t+j*period])/(*beta)(j,t);
             x[t+j*period+2*period*product]=0;//no storage
         }
     }
@@ -111,8 +111,8 @@ bool QPSolver::eval_f(Index n, const Number* x, bool new_x, Number& product_valu
     {
         for (Index t = 0; t < period; t++)
         {
-            product_value -= ((*alpha)(j,t)-(*beta)(j,t)*Price(j,t,x))*Price(j,t,x)
-                -(*prod)(j,t)*Prod(j,t,x)-(*stor)(j,t)*Stor(j,t,x);
+            product_value -= ((*alpha)(j,t)-(*beta)(j,t)*x[t+j*period+period*product])*x[t+j*period+period*product]
+                -(*prod)(j,t)*x[t+j*period]-(*stor)(j,t)*x[t+j*period+2*period*product];
         }
     }
     return true;
@@ -126,7 +126,7 @@ bool QPSolver::eval_grad_f(Index n, const Number* x, bool new_x, Number* grad_f)
         for (Index t = 0; t < period; t ++)
         {
         grad_f[t+j*period] = (*prod)(j,t);
-        grad_f[t+j*period+period*product] = 2*(*beta)(j,t)*Price(j,t,x)-(*alpha)(j,t);
+        grad_f[t+j*period+period*product] = 2*(*beta)(j,t)*x[t+j*period+period*product]-(*alpha)(j,t);
         grad_f[t+j*period+2*period*product] = (*stor)(j,t);
         }
     }
@@ -141,11 +141,11 @@ bool QPSolver::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g)
     {
         for (Index t = 0; t < period; t ++)
         {
-            g[t+j*period] = Prod(j,t,x) - Stor(j,t,x) 
-                + (*beta)(j,t)*Price(j,t,x);
+            g[t+j*period] = x[t+j*period] - x[t+j*period+2*period*product] 
+                + (*beta)(j,t)*x[t+j*period+period*product];
             if (t > 0)
             {
-                g[t+j*period] +=  Stor(j,t-1,x);
+                g[t+j*period] +=  x[t-1+j*period+2*period*product];
             }
         }
     }
@@ -155,7 +155,7 @@ bool QPSolver::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g)
         g[t+period*product] = 0;
         for (Index j = 0; j < product; j ++)
         {
-            g[t+period*product] += (*consumption)(j,t)*Prod(j,t,x);
+            g[t+period*product] += (*consumption)(j,t)*x[t+j*period];
         }
     }
     return true;
@@ -173,28 +173,23 @@ bool QPSolver::eval_jac_g(Index n, const Number* x, bool new_x,
         {
             for(Index t = 0; t < period; t++) 
             {
-                iRow[t+j*period]=t+j*period;
-                jCol[t+j*period]=t+j*period;
-                iRow[t+j*period+period*product]=t+j*period;
-                jCol[t+j*period+period*product]=t+j*period+period*product;
-                iRow[t+j*period+2*period*product]=t+j*period;
-                jCol[t+j*period+2*period*product]=t+j*period+2*period*product;
+                //derivate by production
+                iRow[t+j*period] = t+j*period;
+                jCol[t+j*period] = t+j*period;
+                iRow[t+j*period+3*period*product] = t+period*product;//ineguality constraint
+                jCol[t+j*period+3*period*product] = t+j*period;//ineguality constraint
+                //derivate by price
+                iRow[t+j*period+period*product] = t+j*period;
+                jCol[t+j*period+period*product] = t+j*period+period*product;
+                //derivate by storage
+                iRow[t+j*period+2*period*product] = t+j*period;
+                jCol[t+j*period+2*period*product] = t+j*period+2*period*product;
+                if (t+j*period < period*product-1)
+                {
+                    iRow[t+j*period+4*period*product] = t+j*period+1;
+                    jCol[t+j*period+4*period*product] = t+j*period+2*period*product;
+                }
             }
-        }
-        //element due to the inequality constraint
-        for(Index j = 0; j < product; j ++)
-        {
-            for (Index t = 0; t < period; t ++)
-            {
-                iRow[t+j*period+3*period*product]=t+period*product;
-                jCol[t+j*period+3*period*product]=t+j*period;
-            }
-        }
-        //elements on the sub-diagonale (t_{t-1})
-        for(Index t = 0; t < period*product-1; t ++)
-        {
-            iRow[t+4*period*product]=t+1;
-            jCol[t+4*period*product]=t+2*period*product;
         }
     }
     else 
@@ -204,23 +199,18 @@ bool QPSolver::eval_jac_g(Index n, const Number* x, bool new_x,
         {
             for (Index t = 0; t < period; t ++)
             {
+                //derivate by production
                 values[t+j*period] = 1;
+                values[t+j*period+3*period*product]= (*consumption)(j,t);//ineguality constraint
+                //derivate by price
                 values[t+j*period+period*product] = (*beta)(j,t);
+                //derivate by storage
                 values[t+j*period+2*period*product] = -1;
+                if (t+j*period < period*product-1)
+                {
+                    values[t+j*period+4*period*product] = 1;
+                }
             }
-        }
-        //element due to the inequality constraint
-        for(Index j = 0; j < product; j ++)
-        {
-            for (Index t = 0; t < period; t ++)
-            {
-                values[t+j*period+3*period*product]=(*consumption)(j,t);
-            }
-        }
-        //elements on the sub-diagonale (t_{t-1})
-        for(Index t = 0; t < period*product-1; t ++)
-        {
-            values[t+4*period*product]=1;
         }
     }
     return true;
@@ -276,22 +266,6 @@ void QPSolver::finalize_solution(SolverReturn status,
             (*varstor)(j,t) = x[t+j*period+2*period*product];
         }
     }
-}
-
-//functions to simplify the code
-double QPSolver::Price(int j, int t, const Number* x)
-{
-    return x[t+j*period+period*product];
-}
-
-double QPSolver::Prod(int j, int t, const Number* x)
-{
-    return x[t+j*period];
-}
-
-double QPSolver::Stor(int j, int t, const Number* x)
-{
-    return x[t+j*period+2*period*product];
 }
 
 //functions to get back variables

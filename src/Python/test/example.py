@@ -15,7 +15,7 @@ nb_obj = 2
 cycle = 100
 eps = 1.
 param = 0.8
-verbose = 3
+verbose = 0
 address = 'test.csv'
 
 #uncomment following comment to
@@ -37,7 +37,6 @@ time_hor, nb_obj, slope, intercept,\
 setupcost, holdcost, prodcost,\
 consumption, constraint = tl.importdata(address)
 
-print "Initiate\n"
 test = sl.pclsp(slope, intercept, prodcost,
     holdcost, consumption, setupcost, constraint, time_hor, nb_obj, verbose, cycle, eps, param)
 
@@ -46,7 +45,18 @@ print test.PCLSPSolvHeur.__doc__
 print test.DynProgSolv.__doc__
 print test.noQP.__doc__
 
-print "Solve PCSLP\n"
+#set verbose parameter
+test.verbose = 3
+
+#print input parameter
+print "\nData"
+test.plotDat()
+
+#test if feasible
+if test.isFeasible:
+    print "\nInitial point is feasible"
+
+    print "Solve PCSLP\n"
 #test.noQP() #uncomment to use heuristic 
 test.PCLSPSolvHeur()
 
@@ -58,3 +68,5 @@ print "Holding:","\n\t".join([str(test.hold[j]) for j in range(nb_obj)])
 print "Setup:","\n\t".join([str(test.setup[j]) for j in range(nb_obj)])
 print "KKT coef:",str(test.kkt)
 """
+
+

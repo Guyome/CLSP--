@@ -30,6 +30,7 @@ BOOST_PYTHON_MODULE(heurclsp)
         .def("noQP", &HeurClsp::setHeur, "Use an heuristic in spite of QP solver in PCLSPSolvHeur()\n")
         .def("isLSP",&HeurClsp::isWW, "Returns True if you are in lot-size case\n")
         .def("isDiscret",&HeurClsp::isDiscret, "Returns True if you are using discret price")
+        .def("isFeasible",&HeurClsp::feasible, "Returns True if the current state is feasible")
         .def("DynProgSolv", thomasx1, "Solser based on dynamic programming\n"
             "Solve profit lot-size problem\nSee. J. Thomas(1970)\n")
         .def("DynProgSolv", thomasx2, "Solser based on dynamic programming\n"
@@ -37,5 +38,7 @@ BOOST_PYTHON_MODULE(heurclsp)
         .def("DynProgSolv", thomasx3, "Solser based on dynamic programming\n"
             "Modificatied Thomas's algorithm for discrets prices'\n")
         .def("PCLSPSolvHeur", &HeurClsp::heursolver, "Heuristic for PCLSP developped by K.K. Haugen and al.")
+        .def("plotVar",&HeurClsp::plotVariables,"Print all variables")
+        .def("plotDat",&HeurClsp::plotParam,"Print all inputed data")
     ;
 }

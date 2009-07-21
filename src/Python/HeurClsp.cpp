@@ -202,17 +202,38 @@ int HeurClsp::getVerbosity()
 
 void HeurClsp::setSmooth(double _param)
 {
-    param = _param;
+    if( _param < 0.)
+    {
+        throw std::domain_error("Negative smoothing parameter");
+    }
+    else
+    {
+        param = _param;
+    }
 }
 
 void HeurClsp::setStopDiff(double _eps)
 {
-    eps = _eps;
+    if( _eps <= 0.)
+    {
+        throw std::domain_error("Null or negative stopping difference");
+    }
+    else
+    {
+        eps = _eps;
+    }
 }
 
 void HeurClsp::setNbCycle(double _cycle)
 {
-    cycle = _cycle;
+    if( _cycle <= 0.)
+    {
+        throw std::domain_error("Null or negative cycle number");
+    }
+    else
+    {
+        cycle = _cycle;
+    }
 }
 
 void HeurClsp::setVerbosity(int _verbose)
@@ -522,6 +543,10 @@ double HeurClsp::coefQP()
             (*coef) = problem -> getCoef().copy();
         }
     }
+    else
+    {
+        throw std::domain_error("QP Solvers failed");
+    }
 
 ////OUPOUT
     if (verbose >2)
@@ -641,6 +666,10 @@ double HeurClsp::heursolver()
         {
             //run methods to up
             lower = (*this.*updatekkt)();
+            if (lower < 0)
+            {
+                throw std::domain_error("Negative objective");
+            }
             //update KKT coefficients
             (*coef) = param*previouscoef + (1-param)*(*coef);
             //update stoping conditions 

@@ -63,17 +63,17 @@ bool QPSolver::get_bounds_info(Index n, Number* x_l, Number* x_u,
     }
 
     // product*period equality constraint
-    for (Index j = 0; j < product; j ++) 
+    for (Index j = 0; j < product; j ++)
     {
         for (Index t = 0; t < period; t ++)
         {
-            g_l[t+j*period] = g_u[t+j*period] = (*alpha)(j,t); 
+            g_l[t+j*period] = g_u[t+j*period] = (*alpha)(j,t);
         }
     }
     //inequality constraints
-    for (Index t=0; t<period; t++) 
+    for (Index t=0; t<period; t++)
     {
-        g_l[t+period*product] = -1e19;
+        g_l[t+period*product] = 0;
         g_u[t+period*product] = (*constraint)(t);
     }
     return true;
@@ -139,14 +139,13 @@ bool QPSolver::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g)
     //equatlity constraint
     for(Index j = 0; j < product; j ++)
     {
-        for (Index t = 0; t < period; t ++)
+        g[j*period] = x[j*period] - x[j*period+2*period*product]
+                + (*beta)(j,0)*x[j*period+period*product];
+        for (Index t = 1; t < period; t ++)
         {
-            g[t+j*period] = x[t+j*period] - x[t+j*period+2*period*product] 
-                + (*beta)(j,t)*x[t+j*period+period*product];
-            if (t > 0)
-            {
-                g[t+j*period] +=  x[t-1+j*period+2*period*product];
-            }
+            g[t+j*period] = x[t+j*period] - x[t+j*period+2*period*product]
+                + (*beta)(j,t)*x[t+j*period+period*product]
+                + x[t-1+j*period+2*period*product];
         }
     }
     // inequality constraint

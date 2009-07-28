@@ -180,6 +180,16 @@ boost::python::list HeurClsp::getCoef()
     return col;
 }
 
+double HeurClsp::getProduct()
+{
+    return product;
+}
+
+double HeurClsp::getPeriod()
+{
+    return period;
+}
+
 double HeurClsp::getSmooth()
 {
     return param;

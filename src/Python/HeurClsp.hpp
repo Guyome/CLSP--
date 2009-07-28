@@ -80,6 +80,8 @@ public:
     list getCoef();
     list getGAP();
     //methods to get and set parameters
+    double getProduct();
+    double getPeriod();
     double getSmooth();
     double getStopDiff();
     double getNbCycle();

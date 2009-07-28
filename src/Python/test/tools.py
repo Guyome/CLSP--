@@ -138,3 +138,15 @@ def exportdata(address,slope, intercept, prodcost, holdcost,
     row = ["Constraint"]
     row.extend(constraint)
     outputcsv.writerow(row)
+    
+def outGAP(file_name,pclsp,save=True,file_format="svg"):
+    import matplotlib.pyplot as plt
+    import numpy as np
+    plt.plot(100*np.array(pclsp.gap),"r--")
+    plt.title(str(int(pclsp.period))+" period(s) and "+str(int(pclsp.product))+" product(s)")
+    plt.ylabel("GAP (%)")
+    plt.xlabel("Number of cycle")
+    if save:
+        plt.savefig(file_name+".svg",format=file_format,transparent=True)
+    else:
+        plt.show()

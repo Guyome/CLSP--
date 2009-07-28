@@ -56,7 +56,8 @@ test.plotDat()
 if test.isFeasible:
     print "\nInitial point is feasible"
 
-    print "Solve PCSLP\n"
+print "Solve PCSLP\n"
+
 #test.noQP() #uncomment to use heuristic 
 test.PCLSPSolvHeur()
 
@@ -68,5 +69,5 @@ print "Holding:","\n\t".join([str(test.hold[j]) for j in range(nb_obj)])
 print "Setup:","\n\t".join([str(test.setup[j]) for j in range(nb_obj)])
 print "KKT coef:",str(test.kkt)
 """
-
-
+#save GAP in test_gap.svg
+tl.outGAP("test_gap",test)

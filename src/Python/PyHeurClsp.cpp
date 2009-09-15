@@ -2,11 +2,17 @@
 #include "HeurClsp.hpp"
 
 using namespace boost::python;
-
+/**@name Pointors to manage polymorphisme in Python */
+//@{
+/** function pointor for thomas() with price as variable (see thomas)*/
 void (HeurClsp::*thomasx1)() = &HeurClsp::thomas;
+/** function pointor for thomas() with fixed price (see Wagner and Within) */
 void (HeurClsp::*thomasx2)(double) = &HeurClsp::thomas;
+/** function pointor for thomas() with discret prices */
 void (HeurClsp::*thomasx3)(list) = &HeurClsp::thomas;
+//@}
 
+/** Python wrapper for HeurClsp class based on boost.python */
 BOOST_PYTHON_MODULE(heurclsp)
 {
     scope().attr("__doc__") =
